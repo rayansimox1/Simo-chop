@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>تطبيق مبيعات المظلات | Umbrella POS</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <!-- Font Awesome for Android-style icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Hide scrollbar for tabs */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* Android ripple style effect */
+    .active-scale:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 flex justify-center min-h-screen antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Mobile Container Frame -->
+  <div class="w-full max-w-md bg-white min-h-screen flex flex-col shadow-2xl relative pb-20 border-x border-slate-200">
+    
+    <!-- Top Android App Bar -->
+    <header class="bg-gradient-to-r from-indigo-700 via-indigo-600 to-purple-600 text-white pt-4 pb-4 px-4 sticky top-0 z-30 shadow-md">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2 space-x-reverse">
+          <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-lg shadow-inner">
+            <i class="fa-solid fa-umbrella"></i>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold leading-tight">المبيعات</h1>
+            <p class="text-xs text-indigo-100 opacity-90">نظام إدارة المبيعات والمداخيل</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-1 space-x-reverse">
+          <button id="quick-refresh-btn" title="تحديث البيانات" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/25 active-scale flex items-center justify-center text-white transition">
+            <i class="fa-solid fa-arrows-rotate text-sm"></i>
+          </button>
+          <button id="info-btn" title="تعليمات الاستخدام" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/25 active-scale flex items-center justify-center text-white transition">
+            <i class="fa-solid fa-circle-question text-sm"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Views Container -->
+    <main class="flex-1 p-4 overflow-y-auto">
+      
+      <!-- VIEW 1: تسريع البيع (POS / Sale Tab) -->
+      <section id="view-pos" class="space-y-4">
+        
+        <!-- Live Quick Stats Card -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-gradient-to-br from-indigo-50 to-indigo-100/70 border border-indigo-200 p-3 rounded-2xl">
+            <div class="flex items-center justify-between text-indigo-700 text-xs font-semibold mb-1">
+              <span>إجمالي المداخيل</span>
+              <i class="fa-solid fa-cash-register"></i>
+            </div>
+            <div id="pos-stat-revenue" class="text-xl font-extrabold text-indigo-900">0.00 DH</div>
+            <div class="text-[10px] text-indigo-600 font-medium">مجموع المبيعات المسجلة</div>
+          </div>
+          <div class="bg-gradient-to-br from-emerald-50 to-emerald-100/70 border border-emerald-200 p-3 rounded-2xl">
+            <div class="flex items-center justify-between text-emerald-700 text-xs font-semibold mb-1">
+              <span>صافي الأرباح</span>
+              <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div id="pos-stat-profit" class="text-xl font-extrabold text-emerald-900">0.00 DH</div>
+            <div class="text-[10px] text-emerald-600 font-medium">الأرباح بعد خصم التكلفة</div>
+          </div>
+        </div>
+
+        <!-- Color Selection Grid -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+              اختر لون المظلة المراد بيعها:
+            </h2>
+            <span id="selected-color-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">لم يتم الاختيار</span>
+          </div>
+
+          <div id="colors-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            <!-- Injected via JavaScript -->
+          </div>
+        </div>
+
+        <!-- Sale Form Details -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-3">
+          <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-purple-600"></span>
+            تفاصيل عملية البيع:
+          </h2>
+
+          <!-- Quantity Stepper -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5">الكمية المباعة:</label>
+            <div class="flex items-center">
+              <button id="qty-minus" type="button" class="w-12 h-11 bg-slate-100 hover:bg-slate-200 active-scale rounded-r-xl border border-slate-300 text-slate-700 font-bold text-lg flex items-center justify-center transition">
+                <i class="fa-solid fa-minus"></i>
+              </button>
+              <input id="sale-qty" type="number" min="1" value="1" class="w-full h-11 text-center font-bold text-lg text-slate-800 border-y border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+              <button id="qty-plus" type="button" class="w-12 h-11 bg-slate-100 hover:bg-slate-200 active-scale rounded-l-xl border border-slate-300 text-slate-700 font-bold text-lg flex items-center justify-center transition">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Price, Cost & Delivery Input -->
+          <div class="grid grid-cols-3 gap-2.5 pt-1">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">سعر البيع (DH):</label>
+              <input id="sale-price" type="number" step="0.5" value="130" class="w-full h-10 px-2.5 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">سعر الشراء (DH):</label>
+              <input id="cost-price" type="number" step="0.5" value="75" class="w-full h-10 px-2.5 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">التوصيل (DH):</label>
+              <input id="delivery-cost" type="number" step="0.5" value="20" class="w-full h-10 px-2.5 border border-slate-300 rounded-xl text-sm font-bold text-amber-700 bg-amber-50/40 focus:outline-none focus:ring-2 focus:ring-amber-500">
+            </div>
+          </div>
+
+          <!-- Note / Customer (Optional) -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">اسم المشتري أو عنوانه (اختياري):</label>
+            <input id="sale-note" type="text" placeholder="مثال: شارع فاس-مسنانة -العوامة - بوخالف" class="w-full h-10 px-3 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+
+          <!-- Summary calculation box -->
+          <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-1.5 text-xs">
+            <div class="flex justify-between items-center text-slate-600">
+              <span>إجمالي المداخيل:</span>
+              <span id="preview-total-revenue" class="font-bold text-indigo-700 text-sm">130.00 DH</span>
+            </div>
+            <div class="flex justify-between items-center text-slate-600">
+              <span>إجمالي تكلفة شراء المظلات:</span>
+              <span id="preview-total-cost" class="font-bold text-slate-700">75.00 DH</span>
+            </div>
+            <div class="flex justify-between items-center text-slate-600">
+              <span>مصاريف التوصيل:</span>
+              <span id="preview-delivery-cost" class="font-bold text-amber-700">20.00 DH</span>
+            </div>
+            <div class="flex justify-between items-center pt-1 border-t border-slate-200">
+              <span class="font-bold text-slate-800">صافي ربح هذه العملية:</span>
+              <span id="preview-total-profit" class="font-extrabold text-emerald-600 text-sm">+35.00 DH</span>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button id="confirm-sale-btn" type="button" class="w-full h-12 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active-scale text-white font-bold text-base rounded-xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition">
+            <i class="fa-solid fa-circle-check text-lg"></i>
+            <span>تأكيد البيع والخصم من المخزون</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- VIEW 2: لوحة المؤشرات والتقارير (Dashboard Tab) -->
+      <section id="view-dashboard" class="space-y-4 hidden">
+        
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-bold text-slate-800">ملخص الأداء والمداخيل</h2>
+          <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold">محدث لحظياً</span>
+        </div>
+
+        <!-- 4 Metrics Cards -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400 mb-1">
+              <span class="text-xs font-semibold text-slate-600">إجمالي المبيعات</span>
+              <div class="w-7 h-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-coins"></i>
+              </div>
+            </div>
+            <div id="dash-total-revenue" class="text-xl font-extrabold text-blue-900">0.00 DH</div>
+            <span class="text-[10px] text-slate-500">قيمة المبيعات الإجمالية</span>
+          </div>
+
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400 mb-1">
+              <span class="text-xs font-semibold text-slate-600">صافي الأرباح</span>
+              <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-arrow-trend-up"></i>
+              </div>
+            </div>
+            <div id="dash-total-profit" class="text-xl font-extrabold text-emerald-900">0.00 DH</div>
+            <span class="text-[10px] text-slate-500">الأرباح المحققة الصافية</span>
+          </div>
+
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400 mb-1">
+              <span class="text-xs font-semibold text-slate-600">المظلات المباعة</span>
+              <div class="w-7 h-7 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-box-open"></i>
+              </div>
+            </div>
+            <div id="dash-sold-count" class="text-xl font-extrabold text-purple-900">0 قطعة</div>
+            <span class="text-[10px] text-slate-500">إجمالي الكميات المصرفة</span>
+          </div>
+
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between text-slate-400 mb-1">
+              <span class="text-xs font-semibold text-slate-600">المخزون المتبقي</span>
+              <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-warehouse"></i>
+              </div>
+            </div>
+            <div id="dash-remaining-stock" class="text-xl font-extrabold text-amber-900">1096 قطعة</div>
+            <span class="text-[10px] text-slate-500">من أصل 1096</span>
+          </div>
+        </div>
+
+        <!-- Profit Margin Banner -->
+        <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-4 rounded-2xl shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs text-indigo-200 font-semibold">نسبة هامش الربح المحقق</span>
+            <span id="dash-profit-margin" class="text-sm font-extrabold text-emerald-400">0.0%</span>
+          </div>
+          <div class="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+            <div id="dash-margin-bar" class="bg-emerald-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- Sales Chart -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <h3 class="text-xs font-bold text-slate-700 mb-3 flex items-center justify-between">
+            <span>توزيع المبيعات حسب اللون (المداخيل DH)</span>
+            <i class="fa-solid fa-chart-pie text-slate-400"></i>
+          </h3>
+          <div class="relative h-64">
+            <canvas id="salesChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: المخزون والأسعار (Inventory Tab) -->
+      <section id="view-inventory" class="space-y-4 hidden">
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-bold text-slate-800">إدارة المخزون والتسعير</h2>
+          <button id="add-stock-modal-btn" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 active-scale transition">
+            <i class="fa-solid fa-plus"></i>
+            <span>إضافة وارد</span>
+          </button>
+        </div>
+
+        <p class="text-xs text-slate-500 leading-relaxed">
+          يمكنك تعديل سعر التكلفة وسعر البيع الافتراضي لكل لون بالضغط على زر التعديل، وستنعكس تلقائياً في شاشة البيع.
+        </p>
+
+        <!-- Inventory List -->
+        <div id="inventory-list" class="space-y-2.5">
+          <!-- Injected via JavaScript -->
+        </div>
+      </section>
+
+      <!-- VIEW 4: سجل العمليات والفواتير (History Tab) -->
+      <section id="view-history" class="space-y-4 hidden">
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-bold text-slate-800">سجل عمليات البيع</h2>
+          <button id="clear-history-btn" class="text-xs text-rose-600 hover:text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg font-bold border border-rose-200 active-scale transition">
+            مسح السجل
+          </button>
+        </div>
+
+        <!-- History Search / Filter -->
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute right-3 top-3 text-slate-400 text-xs"></i>
+          <input id="history-search" type="text" placeholder="البحث برقم الفاتورة أو اللون أو الملاحظة..." class="w-full h-9 pr-9 pl-3 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500">
+        </div>
+
+        <!-- Transactions Container -->
+        <div id="transactions-list" class="space-y-2.5">
+          <!-- Injected via JavaScript -->
+        </div>
+      </section>
+      
+    </main>
+
+    <!-- Bottom Navigation Bar (Android Mobile Style) -->
+    <nav class="bg-white border-t border-slate-200 fixed bottom-0 max-w-md w-full px-2 py-1.5 flex justify-around items-center z-40 shadow-lg">
+      <button data-tab="pos" class="nav-item flex flex-col items-center justify-center py-1 px-3 rounded-xl text-indigo-600 font-bold transition">
+        <i class="fa-solid fa-basket-shopping text-lg mb-0.5"></i>
+        <span class="text-[10px]">البيع السريع</span>
+      </button>
+
+      <button data-tab="dashboard" class="nav-item flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-400 hover:text-slate-600 transition">
+        <i class="fa-solid fa-chart-simple text-lg mb-0.5"></i>
+        <span class="text-[10px]">المداخيل</span>
+      </button>
+
+      <button data-tab="inventory" class="nav-item flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-400 hover:text-slate-600 transition">
+        <i class="fa-solid fa-boxes-stacked text-lg mb-0.5"></i>
+        <span class="text-[10px]">المخزون</span>
+      </button>
+
+      <button data-tab="history" class="nav-item flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-400 hover:text-slate-600 transition">
+        <i class="fa-solid fa-receipt text-lg mb-0.5"></i>
+        <span class="text-[10px]">السجل</span>
+      </button>
+    </nav>
+
+    <!-- Toast Notification Overlay -->
+    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-slate-900/95 text-white px-4 py-2.5 rounded-2xl shadow-2xl text-xs font-semibold flex items-center gap-2 z-50 opacity-0 pointer-events-none transition-all duration-300 transform -translate-y-2">
+      <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400"></i>
+      <span id="toast-msg">تمت العملية بنجاح</span>
+    </div>
+
+    <!-- Modal: Edit Price & Cost -->
+    <div id="price-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+      <div class="bg-white w-full max-w-sm rounded-2xl p-5 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between border-b pb-3 border-slate-100">
+          <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+            <span id="modal-color-swatch" class="w-3.5 h-3.5 rounded-full inline-block"></span>
+            <span>تعديل تسعير: </span>
+            <span id="modal-color-title" class="text-indigo-600"></span>
+          </h3>
+          <button id="close-price-modal" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">سعر التكلفة الافتراضي (DH):</label>
+            <input id="edit-cost-input" type="number" step="0.5" class="w-full h-10 px-3 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">سعر البيع الافتراضي (DH):</label>
+            <input id="edit-price-input" type="number" step="0.5" class="w-full h-10 px-3 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button id="save-price-btn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 active-scale text-white py-2.5 rounded-xl font-bold text-xs shadow-md transition">حفظ التغييرات</button>
+          <button id="cancel-price-btn" class="px-4 bg-slate-100 hover:bg-slate-200 active-scale text-slate-600 py-2.5 rounded-xl font-bold text-xs transition">إلغاء</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Add Stock (Restock) -->
+    <div id="stock-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+      <div class="bg-white w-full max-w-sm rounded-2xl p-5 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between border-b pb-3 border-slate-100">
+          <h3 class="text-sm font-bold text-slate-800">إضافة شحنة واردة جديدة</h3>
+          <button id="close-stock-modal" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">اختر اللون:</label>
+            <select id="restock-color-select" class="w-full h-10 px-3 border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <!-- Injected dynamically -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">الكمية الواردة (قطعة):</label>
+            <input id="restock-qty-input" type="number" min="1" value="10" class="w-full h-10 px-3 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button id="confirm-restock-btn" class="flex-1 bg-emerald-600 hover:bg-emerald-700 active-scale text-white py-2.5 rounded-xl font-bold text-xs shadow-md transition">إضافة للمخزون</button>
+          <button id="cancel-stock-btn" class="px-4 bg-slate-100 hover:bg-slate-200 active-scale text-slate-600 py-2.5 rounded-xl font-bold text-xs transition">إلغاء</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Info / Help -->
+    <div id="info-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+      <div class="bg-white w-full max-w-sm rounded-2xl p-5 shadow-2xl space-y-3">
+        <div class="flex items-center justify-between border-b pb-2.5 border-slate-100">
+          <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-mobile-screen-button text-indigo-600"></i>
+            <span>تثبيت التطبيق على هاتف أندرويد</span>
+          </h3>
+          <button id="close-info-modal" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+        </div>
+
+        <div class="text-xs text-slate-600 space-y-2 leading-relaxed">
+          <p>يعمل هذا التطبيق كتطبيق هاتف ذكي (Web App) بدون الحاجة لمتجر Google Play:</p>
+          <ol class="list-decimal list-inside space-y-1 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+            <li>افتح الرابط في متصفح هاتفك (Google Chrome).</li>
+            <li>اضغط على قائمة المتصفح (نقاط الثلاث في الأعلى <b>⋮</b>).</li>
+            <li>اختر <b>"الإضافة إلى الشاشة الرئيسية" (Add to Home screen)</b> أو <b>تثبيت التطبيق</b>.</li>
+          </ol>
+          <p class="text-[11px] text-indigo-600 font-semibold">تُحفظ كافة البيانات والمبيعات في ذاكرة هاتفك مباشرة ويمكنك استخدام التطبيق في أي وقت.</p>
+        </div>
+
+        <button id="dismiss-info-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-xl font-bold text-xs transition">حسناً، فهمت</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Initial Umbrella Data (1096 items matching user request)
+    const DEFAULT_DELIVERY_FEE = 20;
+    const DEFAULT_COLORS = [
+      { id: 'black', name: 'أسود', stock: 117, initialStock: 117, cost: 75, price: 130, hex: '#1e293b', textColor: '#ffffff' },
+      { id: 'black 2', name: 'منيطة', stock: 120, initialStock: 120, cost: 55, price: 120, hex: '#1e293b', textColor: '#ffffff' },
+      { id: 'blue', name: 'أزرق', stock: 97, initialStock: 97, cost: 75, price: 130, hex: '#2563eb', textColor: '#ffffff' },
+      { id: 'gray', name: 'رمادي', stock: 78, initialStock: 78, cost: 75, price: 130, hex: '#64748b', textColor: '#ffffff' },
+      { id: 'white', name: 'أبيض', stock: 71, initialStock: 71, cost: 75, price: 130, hex: '#f8fafc', textColor: '#ffffff', border: true },
+      { id: 'pink', name: 'وردي', stock: 65, initialStock: 65, cost: 75, price: 130, hex: '#ec4899', textColor: '#ffffff' },
+      { id: 'green', name: 'أخضر', stock: 53, initialStock: 53, cost: 75, price: 130, hex: '#16a34a', textColor: '#ffffff' },
+      { id: 'light-green', name: 'أخضر فاتح', stock: 15, initialStock: 15, cost: 75, price: 130, hex: '#84cc16', textColor: '#ffffff' }
+    ];
+
+    // State
+    let colors = [];
+    let transactions = [];
+    let selectedColorId = 'black';
+    let salesChartInstance = null;
+    let editingColorId = null;
+
+    // Load from localStorage or defaults
+    function loadState() {
+      try {
+        const savedColors = localStorage.getItem('umbrella_pos_colors_v2');
+        const savedTx = localStorage.getItem('umbrella_pos_tx_v2');
+        if (savedColors) {
+          colors = JSON.parse(savedColors);
+        } else {
+          colors = JSON.parse(JSON.stringify(DEFAULT_COLORS));
+        }
+        if (savedTx) {
+          transactions = JSON.parse(savedTx);
+        } else {
+          transactions = [];
+        }
+      } catch (e) {
+        colors = JSON.parse(JSON.stringify(DEFAULT_COLORS));
+        transactions = [];
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem('umbrella_pos_colors_v2', JSON.stringify(colors));
+        localStorage.setItem('umbrella_pos_tx_v2', JSON.stringify(transactions));
+      } catch (e) {
+        console.warn('Storage quota or blocked');
+      }
+    }
+
+    // Toast helper
+    function showToast(message, isSuccess = true) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-msg');
+      const toastIcon = document.getElementById('toast-icon');
+      
+      toastMsg.textContent = message;
+      if (isSuccess) {
+        toastIcon.className = 'fa-solid fa-circle-check text-emerald-400';
+      } else {
+        toastIcon.className = 'fa-solid fa-triangle-exclamation text-rose-400';
+      }
+
+      toast.classList.remove('opacity-0', '-translate-y-2', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      
+      setTimeout(() => {
+        toast.classList.add('opacity-0', '-translate-y-2', 'pointer-events-none');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, 2500);
+    }
+
+    // Render Color Selection Cards in POS View
+    function renderColorsGrid() {
+      const grid = document.getElementById('colors-grid');
+      grid.innerHTML = '';
+
+      colors.forEach(item => {
+        const isSelected = item.id === selectedColorId;
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = `p-2.5 rounded-xl border text-right transition active-scale relative overflow-hidden flex flex-col justify-between ${
+          isSelected 
+            ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20 shadow-sm' 
+            : 'border-slate-200 bg-white hover:border-slate-300'
+        }`;
+        
+        card.innerHTML = `
+          <div class="flex items-center justify-between w-full mb-1">
+            <span class="w-4 h-4 rounded-full shadow-sm" style="background-color: ${item.hex}; ${item.border ? 'border: 1px solid #cbd5e1' : ''}"></span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md ${item.stock > 10 ? 'bg-slate-100 text-slate-700' : 'bg-rose-100 text-rose-700 font-extrabold'}">
+              ${item.stock} قطعة
+            </span>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-slate-800">${item.name}</div>
+            <div class="text-[10px] text-slate-500 font-medium">${item.price} DH</div>
+          </div>
+          ${isSelected ? '<div class="absolute bottom-1 left-1.5 text-indigo-600 text-xs"><i class="fa-solid fa-check"></i></div>' : ''}
+        `;
+
+        card.addEventListener('click', () => {
+          selectedColorId = item.id;
+          updateSelectedColorUI();
+          renderColorsGrid();
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    function updateSelectedColorUI() {
+      const selected = colors.find(c => c.id === selectedColorId) || colors[0];
+      const badge = document.getElementById('selected-color-badge');
+      badge.textContent = `${selected.name} (المتوفر: ${selected.stock})`;
+      badge.className = `text-xs font-bold px-2.5 py-0.5 rounded-full ${
+        selected.stock > 0 ? 'bg-indigo-100 text-indigo-800' : 'bg-rose-100 text-rose-800'
+      }`;
+
+      // Pre-fill inputs with selected color's default price & cost
+      document.getElementById('sale-price').value = selected.price;
+      document.getElementById('cost-price').value = selected.cost;
+      updateLiveCalculation();
+    }
+
+    function updateLiveCalculation() {
+      const qty = parseInt(document.getElementById('sale-qty').value) || 0;
+      const price = parseFloat(document.getElementById('sale-price').value) || 0;
+      const cost = parseFloat(document.getElementById('cost-price').value) || 0;
+      const delivery = parseFloat(document.getElementById('delivery-cost').value) || 0;
+
+      const totalRevenue = qty * price;
+      const totalCost = qty * cost;
+      const totalProfit = totalRevenue - totalCost - delivery;
+
+      document.getElementById('preview-total-revenue').textContent = `${totalRevenue.toFixed(2)} DH`;
+      document.getElementById('preview-total-cost').textContent = `${totalCost.toFixed(2)} DH`;
+      document.getElementById('preview-delivery-cost').textContent = `${delivery.toFixed(2)} DH`;
+      
+      const profitEl = document.getElementById('preview-total-profit');
+      profitEl.textContent = `${totalProfit >= 0 ? '+' : ''}${totalProfit.toFixed(2)} DH`;
+      profitEl.className = `text-sm font-extrabold ${totalProfit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+    }
+
+    // Stats calculations
+    function calculateStats() {
+      let totalRevenue = 0;
+      let totalCost = 0;
+      let totalSoldUnits = 0;
+      let totalCurrentStock = 0;
+
+      let totalDelivery = 0;
+      transactions.forEach(t => {
+        totalRevenue += t.revenue;
+        totalCost += t.cost;
+        totalDelivery += (t.delivery || 0);
+        totalSoldUnits += t.quantity;
+      });
+
+      colors.forEach(c => {
+        totalCurrentStock += c.stock;
+      });
+
+      const totalProfit = totalRevenue - totalCost - totalDelivery;
+      const margin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+
+      return { totalRevenue, totalProfit, totalSoldUnits, totalCurrentStock, margin };
+    }
+
+    function updateStatsUI() {
+      const stats = calculateStats();
+
+      // POS quick banner
+      document.getElementById('pos-stat-revenue').textContent = `${stats.totalRevenue.toFixed(2)} DH`;
+      document.getElementById('pos-stat-profit').textContent = `${stats.totalProfit.toFixed(2)} DH`;
+
+      // Dashboard tab
+      document.getElementById('dash-total-revenue').textContent = `${stats.totalRevenue.toFixed(2)} DH`;
+      document.getElementById('dash-total-profit').textContent = `${stats.totalProfit.toFixed(2)} DH`;
+      document.getElementById('dash-sold-count').textContent = `${stats.totalSoldUnits} قطعة`;
+      document.getElementById('dash-remaining-stock').textContent = `${stats.totalCurrentStock} قطعة`;
+      
+      document.getElementById('dash-profit-margin').textContent = `${stats.margin.toFixed(1)}%`;
+      document.getElementById('dash-margin-bar').style.width = `${Math.min(Math.max(stats.margin, 0), 100)}%`;
+
+      renderChart();
+    }
+
+    // Chart.js render
+    function renderChart() {
+      const canvas = document.getElementById('salesChart');
+      if (!canvas) return;
+
+      const labels = colors.map(c => c.name);
+      
+      // Calculate revenue per color
+      const revenuePerColor = colors.map(c => {
+        return transactions
+          .filter(t => t.colorId === c.id)
+          .reduce((sum, t) => sum + t.revenue, 0);
+      });
+
+      const backgroundColors = colors.map(c => c.hex);
+
+      if (salesChartInstance) {
+        salesChartInstance.data.labels = labels;
+        salesChartInstance.data.datasets[0].data = revenuePerColor;
+        salesChartInstance.update();
+        return;
+      }
+
+      const ctx = canvas.getContext('2d');
+      salesChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'المبيعات (DH)',
+            data: revenuePerColor,
+            backgroundColor: backgroundColors,
+            borderRadius: 6,
+            borderWidth: 1,
+            borderColor: '#e2e8f0'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(val) { return val + ' DH'; }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Render Inventory List
+    function renderInventoryList() {
+      const list = document.getElementById('inventory-list');
+      list.innerHTML = '';
+
+      colors.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between shadow-sm';
+        
+        row.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl shadow-inner flex items-center justify-center text-xs" style="background-color: ${item.hex}; ${item.border ? 'border: 1px solid #cbd5e1' : ''}">
+              <i class="fa-solid fa-umbrella" style="color: ${item.textColor}"></i>
+            </span>
+            <div>
+              <div class="text-xs font-bold text-slate-800">${item.name}</div>
+              <div class="text-[10px] text-slate-500">التكلفة: ${item.cost} DH | البيع: ${item.price} DH</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-left">
+              <div class="text-xs font-extrabold text-slate-800">${item.stock} قطعة</div>
+              <div class="text-[9px] font-semibold text-emerald-600">ربح القطعة: ${(item.price - item.cost).toFixed(1)} DH</div>
+            </div>
+            <button data-edit-id="${item.id}" class="edit-price-btn w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 active-scale text-slate-600 flex items-center justify-center text-xs transition" title="تعديل السعر">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+          </div>
+        `;
+
+        list.appendChild(row);
+      });
+
+      // Attach edit listeners
+      document.querySelectorAll('.edit-price-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.getAttribute('data-edit-id');
+          openPriceModal(id);
+        });
+      });
+    }
+
+    // Render History
+    function renderHistoryList(filterText = '') {
+      const list = document.getElementById('transactions-list');
+      list.innerHTML = '';
+
+      const filtered = transactions.filter(t => {
+        if (!filterText) return true;
+        const search = filterText.toLowerCase();
+        return t.colorName.toLowerCase().includes(search) || 
+               (t.note && t.note.toLowerCase().includes(search)) ||
+               t.id.toLowerCase().includes(search);
+      });
+
+      if (filtered.length === 0) {
+        list.innerHTML = `
+          <div class="bg-slate-50 border border-dashed border-slate-200 rounded-xl p-8 text-center text-slate-400">
+            <i class="fa-solid fa-receipt text-3xl mb-2 opacity-50"></i>
+            <p class="text-xs">لا توجد عمليات بيع مسجلة حتى الآن</p>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.slice().reverse().forEach(t => {
+        const item = document.createElement('div');
+        item.className = 'bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex items-center justify-between text-xs';
+        
+        item.innerHTML = `
+          <div class="space-y-0.5">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-slate-800">${t.colorName}</span>
+              <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded font-semibold">${t.quantity} قطع</span>
+              <span class="text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.2 rounded font-semibold">توصيل: ${(t.delivery !== undefined ? t.delivery : 20)} DH</span>
+            </div>
+            <div class="text-[10px] text-slate-400">${t.date} ${t.note ? '• ' + t.note : ''}</div>
+          </div>
+          <div class="text-left space-y-0.5">
+            <div class="font-bold text-indigo-700">${t.revenue.toFixed(2)} DH</div>
+            <div class="text-[10px] font-extrabold text-emerald-600">+${t.profit.toFixed(2)} DH ربح</div>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    // Process a Sale
+    function handleSaleSubmit() {
+      const selected = colors.find(c => c.id === selectedColorId);
+      if (!selected) {
+        showToast('يرجى اختيار لون المظلة أولاً', false);
+        return;
+      }
+
+      const qty = parseInt(document.getElementById('sale-qty').value) || 0;
+      const price = parseFloat(document.getElementById('sale-price').value) || 0;
+      const cost = parseFloat(document.getElementById('cost-price').value) || 0;
+      const delivery = parseFloat(document.getElementById('delivery-cost').value) || 0;
+      const note = document.getElementById('sale-note').value.trim();
+
+      if (qty <= 0) {
+        showToast('الكمية يجب أن تكون 1 على الأقل', false);
+        return;
+      }
+
+      if (selected.stock < qty) {
+        showToast(`المخزون غير كافٍ! المتوفر فقط ${selected.stock} مظلة`, false);
+        return;
+      }
+
+      // Deduct stock
+      selected.stock -= qty;
+
+      const revenue = qty * price;
+      const totalCost = qty * cost;
+      const profit = revenue - totalCost - delivery;
+
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('ar-MA', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+      const tx = {
+        id: 'TRX-' + Date.now().toString().slice(-5),
+        colorId: selected.id,
+        colorName: selected.name,
+        quantity: qty,
+        unitPrice: price,
+        unitCost: cost,
+        delivery: delivery,
+        revenue: revenue,
+        cost: totalCost,
+        profit: profit,
+        date: dateStr,
+        note: note
+      };
+
+      transactions.push(tx);
+      saveState();
+
+      // Reset form
+      document.getElementById('sale-qty').value = 1;
+      document.getElementById('delivery-cost').value = DEFAULT_DELIVERY_FEE;
+      document.getElementById('sale-note').value = '';
+
+      updateSelectedColorUI();
+      renderColorsGrid();
+      updateStatsUI();
+      renderInventoryList();
+      renderHistoryList();
+
+      showToast(`تم بيع ${qty} مظلة ${selected.name} بنجاح! الربح: +${profit.toFixed(2)} DH`);
+    }
+
+    // Modals Handling
+    function openPriceModal(colorId) {
+      editingColorId = colorId;
+      const item = colors.find(c => c.id === colorId);
+      if (!item) return;
+
+      document.getElementById('modal-color-title').textContent = item.name;
+      document.getElementById('modal-color-swatch').style.backgroundColor = item.hex;
+      document.getElementById('edit-cost-input').value = item.cost;
+      document.getElementById('edit-price-input').value = item.price;
+
+      document.getElementById('price-modal').classList.remove('hidden');
+    }
+
+    function closePriceModal() {
+      document.getElementById('price-modal').classList.add('hidden');
+      editingColorId = null;
+    }
+
+    function savePriceChanges() {
+      if (!editingColorId) return;
+      const item = colors.find(c => c.id === editingColorId);
+      if (!item) return;
+
+      const newCost = parseFloat(document.getElementById('edit-cost-input').value) || 0;
+      const newPrice = parseFloat(document.getElementById('edit-price-input').value) || 0;
+
+      item.cost = newCost;
+      item.price = newPrice;
+      saveState();
+
+      closePriceModal();
+      renderInventoryList();
+      renderColorsGrid();
+      updateSelectedColorUI();
+      showToast(`تم تحديث أسعار مظلات ${item.name} بنجاح`);
+    }
+
+    function populateRestockDropdown() {
+      const select = document.getElementById('restock-color-select');
+      select.innerHTML = '';
+      colors.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = `${c.name} (المتوفر حالياً: ${c.stock})`;
+        select.appendChild(opt);
+      });
+    }
+
+    function handleRestockSubmit() {
+      const colorId = document.getElementById('restock-color-select').value;
+      const qty = parseInt(document.getElementById('restock-qty-input').value) || 0;
+
+      if (qty <= 0) {
+        showToast('يرجى إدخال كمية صحيحة', false);
+        return;
+      }
+
+      const item = colors.find(c => c.id === colorId);
+      if (!item) return;
+
+      item.stock += qty;
+      saveState();
+
+      document.getElementById('stock-modal').classList.add('hidden');
+      renderColorsGrid();
+      updateSelectedColorUI();
+      updateStatsUI();
+      renderInventoryList();
+      showToast(`تمت إضافة ${qty} مظلة ${item.name} إلى المخزون`);
+    }
+
+    // Tab Navigation
+    function switchTab(tabId) {
+      const views = ['pos', 'dashboard', 'inventory', 'history'];
+      views.forEach(v => {
+        const el = document.getElementById(`view-${v}`);
+        if (el) {
+          if (v === tabId) {
+            el.classList.remove('hidden');
+          } else {
+            el.classList.add('hidden');
+          }
+        }
+      });
+
+      // Update Nav active style
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        const dataTab = btn.getAttribute('data-tab');
+        if (dataTab === tabId) {
+          btn.className = 'nav-item flex flex-col items-center justify-center py-1 px-3 rounded-xl text-indigo-600 font-bold transition';
+        } else {
+          btn.className = 'nav-item flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-400 hover:text-slate-600 transition';
+        }
+      });
+
+      if (tabId === 'dashboard') {
+        renderChart();
+      }
+    }
+
+    // Setup Event Listeners
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      renderColorsGrid();
+      updateSelectedColorUI();
+      updateStatsUI();
+      renderInventoryList();
+      renderHistoryList();
+
+      // Nav Tabs
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tab = btn.getAttribute('data-tab');
+          switchTab(tab);
+        });
+      });
+
+      // Quantity buttons
+      document.getElementById('qty-plus').addEventListener('click', () => {
+        const input = document.getElementById('sale-qty');
+        input.value = (parseInt(input.value) || 0) + 1;
+        updateLiveCalculation();
+      });
+
+      document.getElementById('qty-minus').addEventListener('click', () => {
+        const input = document.getElementById('sale-qty');
+        const curr = parseInt(input.value) || 1;
+        if (curr > 1) {
+          input.value = curr - 1;
+          updateLiveCalculation();
+        }
+      });
+
+      document.getElementById('sale-qty').addEventListener('input', updateLiveCalculation);
+      document.getElementById('sale-price').addEventListener('input', updateLiveCalculation);
+      document.getElementById('cost-price').addEventListener('input', updateLiveCalculation);
+      document.getElementById('delivery-cost').addEventListener('input', updateLiveCalculation);
+
+      // Confirm Sale Button
+      document.getElementById('confirm-sale-btn').addEventListener('click', handleSaleSubmit);
+
+      // Header buttons
+      document.getElementById('quick-refresh-btn').addEventListener('click', () => {
+        loadState();
+        renderColorsGrid();
+        updateSelectedColorUI();
+        updateStatsUI();
+        renderInventoryList();
+        renderHistoryList();
+        showToast('تم تحديث البيانات');
+      });
+
+      document.getElementById('info-btn').addEventListener('click', () => {
+        document.getElementById('info-modal').classList.remove('hidden');
+      });
+
+      document.getElementById('close-info-modal').addEventListener('click', () => {
+        document.getElementById('info-modal').classList.add('hidden');
+      });
+      document.getElementById('dismiss-info-btn').addEventListener('click', () => {
+        document.getElementById('info-modal').classList.add('hidden');
+      });
+
+      // Price Modal
+      document.getElementById('close-price-modal').addEventListener('click', closePriceModal);
+      document.getElementById('cancel-price-btn').addEventListener('click', closePriceModal);
+      document.getElementById('save-price-btn').addEventListener('click', savePriceChanges);
+
+      // Restock Modal
+      document.getElementById('add-stock-modal-btn').addEventListener('click', () => {
+        populateRestockDropdown();
+        document.getElementById('stock-modal').classList.remove('hidden');
+      });
+      document.getElementById('close-stock-modal').addEventListener('click', () => {
+        document.getElementById('stock-modal').classList.add('hidden');
+      });
+      document.getElementById('cancel-stock-btn').addEventListener('click', () => {
+        document.getElementById('stock-modal').classList.add('hidden');
+      });
+      document.getElementById('confirm-restock-btn').addEventListener('click', handleRestockSubmit);
+
+      // History Search & Clear
+      document.getElementById('history-search').addEventListener('input', (e) => {
+        renderHistoryList(e.target.value);
+      });
+
+      document.getElementById('clear-history-btn').addEventListener('click', () => {
+        if (transactions.length === 0) return;
+        transactions = [];
+        saveState();
+        updateStatsUI();
+        renderHistoryList();
+        showToast('تم مسح سجل المبيعات');
+      });
+    });
+  </script>
+</body>
+</html>
