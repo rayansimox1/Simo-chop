@@ -144,13 +144,22 @@
 
                     <div class="lg:col-span-2">
                         <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-100">
-                            <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
-                                <h2 class="text-lg font-bold text-slate-800">📋 متابعة الطلبات</h2>
-                                <div class="flex flex-wrap gap-2 text-xs">
-                                    <button onclick="setFilter('pending')" id="f-pending" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-bold">قيد الانتظار</button>
-                                    <button onclick="setFilter('scheduled')" id="f-scheduled" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 font-bold">مجدول 📅</button>
-                                    <button onclick="setFilter('delivered')" id="f-delivered" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 font-bold">تم الإستلام</button>
-                                    <button onclick="setFilter('refused')" id="f-refused" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 font-bold">رفض الإستلام</button>
+                            <div class="mb-4">
+                                <h2 class="text-lg font-bold text-slate-800 mb-3">📋 متابعة الطلبات</h2>
+                                <!-- أزرار الفلترة البارزة والجميلة -->
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-bold">
+                                    <button onclick="setFilter('pending')" id="f-pending" class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl shadow-sm transition active-scale bg-amber-500 text-white">
+                                        <i class="fa-solid fa-clock-rotate-left"></i> قيد الانتظار
+                                    </button>
+                                    <button onclick="setFilter('scheduled')" id="f-scheduled" class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl shadow-sm transition active-scale bg-slate-200 text-slate-700">
+                                        <i class="fa-solid fa-calendar-days"></i> مجدولة
+                                    </button>
+                                    <button onclick="setFilter('delivered')" id="f-delivered" class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl shadow-sm transition active-scale bg-slate-200 text-slate-700">
+                                        <i class="fa-solid fa-circle-check"></i> تم الإستلام
+                                    </button>
+                                    <button onclick="setFilter('refused')" id="f-refused" class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl shadow-sm transition active-scale bg-slate-200 text-slate-700">
+                                        <i class="fa-solid fa-circle-xmark"></i> رفض الإستلام
+                                    </button>
                                 </div>
                             </div>
                             <div id="sellerOrdersList" class="space-y-4"></div>
@@ -277,7 +286,7 @@
         localStorage.setItem('DELIVERY_ROOM_CODE', roomCode);
 
         const ORDERS_KEY = `ORDERS_DATA_${roomCode}`;
-        const COLORS_KEY = `COLORS_DATA_${roomCode}_v7`;
+        const COLORS_KEY = `COLORS_DATA_${roomCode}_v8`;
         const TX_KEY = `TX_DATA_${roomCode}`;
         const COURIER_DEBT_KEY = `COURIER_DEBT_${roomCode}`;
         const NTFY_TOPIC = `simo_delivery_sync_${roomCode}`;
@@ -483,10 +492,26 @@
 
         function setFilter(f) {
             currentFilter = f;
-            ['pending', 'scheduled', 'delivered', 'refused'].forEach(k => {
-                const btn = document.getElementById('f-' + k);
-                if (btn) btn.className = (k === f) ? 'px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-bold' : 'px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 font-bold';
+            
+            // تحديث أشكال الأزرار البارزة عند الضغط عليها
+            const buttons = {
+                'pending': { id: 'f-pending', activeClass: 'bg-amber-500 text-white' },
+                'scheduled': { id: 'f-scheduled', activeClass: 'bg-sky-600 text-white' },
+                'delivered': { id: 'f-delivered', activeClass: 'bg-emerald-600 text-white' },
+                'refused': { id: 'f-refused', activeClass: 'bg-rose-600 text-white' }
+            };
+
+            Object.keys(buttons).forEach(k => {
+                const btn = document.getElementById(buttons[k].id);
+                if (btn) {
+                    if (k === f) {
+                        btn.className = `flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl shadow-md transition active-scale font-bold text-xs ${buttons[k].activeClass}`;
+                    } else {
+                        btn.className = 'flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl shadow-sm transition active-scale font-bold text-xs bg-slate-200 text-slate-700 hover:bg-slate-300';
+                    }
+                }
             });
+
             renderSellerOrders();
         }
 
@@ -570,8 +595,20 @@
                 return;
             }
 
-            container.innerHTML = filtered.map(order => `
-                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/60">
+            container.innerHTML = filtered.map(order => {
+                let timeStr = '';
+                if (order.status === 'delivered' && order.deliveredAt) {
+                    const d = new Date(order.deliveredAt);
+                    timeStr = `
+                        <div class="mt-2 pt-2 border-t border-emerald-100 text-[11px] text-emerald-700 font-semibold flex items-center gap-1.5">
+                            <i class="fa-solid fa-calendar-check"></i>
+                            <span>تاريخ ووقت التسليم: ${d.toLocaleDateString('ar-MA')} على الساعة ${d.toLocaleTimeString('ar-MA', {hour: '2-digit', minute:'2-digit'})}</span>
+                        </div>
+                    `;
+                }
+
+                return `
+                <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/60 shadow-sm">
                     <div class="flex justify-between items-start gap-2 mb-2">
                         <div>
                             <span class="text-xs bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded">${order.productName || 'مظلة'}</span>
@@ -583,13 +620,20 @@
                         <a href="tel:${order.phone}" class="font-bold text-indigo-600" dir="ltr">📞 ${order.phone}</a>
                         <span class="font-extrabold text-slate-800">${order.price} د.م</span>
                     </div>
+                    ${timeStr}
                     ${order.status === 'refused' && order.refusalReason ? `
                         <div class="mt-3 bg-rose-50 border border-rose-200 rounded-lg p-2.5 text-xs text-rose-800">
                             <strong>سبب الرفض من اللفرور:</strong> ${order.refusalReason}
                         </div>
                     ` : ''}
-                </div>
-            `).join('');
+                    ${order.status === 'scheduled' ? `
+                        <div class="mt-3 bg-sky-50 border border-sky-200 rounded-lg p-2.5 text-xs text-sky-900 flex justify-between items-center">
+                            <span>📅 موعد التسليم: ${order.scheduledDate} (${order.scheduledTime})</span>
+                            <button onclick="returnToCourier('${order.id}')" class="bg-sky-600 text-white px-2.5 py-1 rounded-lg font-bold">إعادة للفرور</button>
+                        </div>
+                    ` : ''}
+                </div>`;
+            }).join('');
         }
 
         function renderInventoryList() {
