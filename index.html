@@ -210,8 +210,6 @@
                     </button>
                     <div>
                         <h1 class="text-lg font-extrabold text-white" id="courierTitleName">صفحة اللفرور</h1>
-                        <p class="text-xs text-emerald-400">🟢 متصل بالبائع مباشرة</p>
-                    </div>
                 </div>
                 <span class="bg-amber-500 text-slate-950 font-extrabold text-sm px-3 py-1 rounded-full" id="pendingBadge">0 قيد الانتظار</span>
             </div>
@@ -522,9 +520,9 @@
             const courierName = localStorage.getItem(COURIER_NAME_KEY) || 'اللفرور';
             const msg = `👋 السلام عليكم 👋\n 
 
- معكم 🛵 ${courierName} اللفرور \n
+ 🛵 معكم : ${courierName} اللفرور 🛵 \n
 📦 كنتواصلو معكم بخصوص طلبكم: ${productName} \n
-💵 المبلغ المستحق : ${price} DH \n
+💵 المبلغ المستحق : ${price} DH \n💵
 📌 المرجو تأكيد عنوانكم : ${address}`;
             return `https://wa.me/${clean}?text=${encodeURIComponent(msg)}`;
         }
