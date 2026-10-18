@@ -501,12 +501,9 @@
             const courierName = localStorage.getItem(COURIER_NAME_KEY) || 'اسم اللفرور';
             const msg = `👋 السلام عليكم 👋\n 
 
- معكم 🛵 ${courierName} \n
-
+ معكم 🛵 ${courierName} اللفرور \n
 📦 كنتواصلو معكم بخصوص طلبكم: ${productName} \n
-
 💵 المبلغ المستحق : ${price} DH \n
-
 📌 المرجو تأكيد عنوانكم : ${address}`;
             return `https://wa.me/${clean}?text=${encodeURIComponent(msg)}`;
         }
