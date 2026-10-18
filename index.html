@@ -206,7 +206,7 @@
                 <div class="flex items-center gap-3">
                     <span class="bg-emerald-500/20 text-emerald-400 p-2 rounded-xl text-xl">🛵</span>
                     <div>
-                        <h1 class="text-lg font-extrabold text-white">صفحة اللفرور</h1>
+                        <h1 class="text-lg font-extrabold text-white" id="courierTitleName">صفحة اللفرور</h1>
                         <p class="text-xs text-emerald-400" id="courierStatus">🟢 متصل بالبائع مباشرة</p>
                     </div>
                 </div>
@@ -285,9 +285,10 @@
         localStorage.setItem('DELIVERY_ROOM_CODE', roomCode);
 
         const ORDERS_KEY = `ORDERS_DATA_${roomCode}`;
-        const COLORS_KEY = `COLORS_DATA_${roomCode}_v9`;
+        const COLORS_KEY = `COLORS_DATA_${roomCode}_v10`;
         const TX_KEY = `TX_DATA_${roomCode}`;
         const COURIER_DEBT_KEY = `COURIER_DEBT_${roomCode}`;
+        const COURIER_NAME_KEY = `COURIER_NAME_${roomCode}`;
         const NTFY_TOPIC = `simo_delivery_sync_${roomCode}`;
 
         let orders = JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
@@ -304,6 +305,18 @@
             document.getElementById('appBody').className = 'min-h-screen pb-12 bg-slate-900 text-white';
             document.getElementById('courierView').classList.remove('hidden');
             document.title = 'صفحة اللفرور - الطلبات قيد الانتظار';
+
+            // التحقق من اسم اللفرور أو طلبه إن لم يكن مسجلاً
+            let courierName = localStorage.getItem(COURIER_NAME_KEY);
+            if (!courierName || courierName.trim() === '') {
+                courierName = prompt('المرجو إدخال اسمك (اللفرور):', 'اللفرور');
+                if (courierName && courierName.trim()) {
+                    localStorage.setItem(COURIER_NAME_KEY, courierName.trim());
+                } else {
+                    localStorage.setItem(COURIER_NAME_KEY, 'اللفرور');
+                }
+            }
+            document.getElementById('courierTitleName').textContent = `اللفرور: ${localStorage.getItem(COURIER_NAME_KEY)}`;
         } else {
             document.getElementById('appBody').className = 'min-h-screen pb-12 bg-slate-100 text-slate-900';
             document.getElementById('sellerView').classList.remove('hidden');
@@ -470,6 +483,14 @@
             activeActionId = null;
             saveAll();
             renderUI();
+
+            // إرسال رسالة واتساب تلقائية للبائع على الرقم +212660005716
+            const courierName = localStorage.getItem(COURIER_NAME_KEY) || 'اللفرور';
+            const sellerWhatsAppNumber = '212660005716';
+            const waMsg = `✅ *تم التسليم بنجاح بواسطة (${courierName})*\n\n📦 *المنتج:* ${order.productName}\n📍 *العنوان:* ${order.address}\n📞 *هاتف المستلم:* ${order.phone}\n💰 *ثمن المنتج:* ${order.price} د.م`;
+            
+            const waUrl = `https://wa.me/${sellerWhatsAppNumber}?text=${encodeURIComponent(waMsg)}`;
+            window.open(waUrl, '_blank');
         }
 
         function settleCourierDebt() {
@@ -568,7 +589,6 @@
             const unsettledDelivery = unsettledToday.reduce((sum, o) => sum + Number(o.deliveryFee || 20), 0);
             const courierRemainingMoney = unsettledRevenue - unsettledDelivery;
 
-            // حساب المجموع الصافي الإجمالي مباشرة من الطلبات المسلمة الحالية (ثمن الطلب - مصاريف التوصيل)
             let totalNetProfit = deliveredOrders.reduce((sum, o) => sum + (Number(o.price) - Number(o.deliveryFee || 20)), 0);
 
             document.getElementById('statPending').textContent = pendingCount;
