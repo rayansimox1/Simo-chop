@@ -498,22 +498,14 @@
             } else if (clean.startsWith('+')) {
                 clean = clean.substring(1);
             }
-            const courierName = localStorage.getItem(COURIER_NAME_KEY) || 'لفرور';
+            const courierName = localStorage.getItem(COURIER_NAME_KEY) || 'اسم اللفرور';
             const msg = `👋 السلام عليكم 👋\n 
-
 
  معكم 🛵 ${courierName} \n
 
-
-
 📦 كنتواصلو معكم بخصوص طلبكم: ${productName} \n
 
-
-
 💵 المبلغ المستحق : ${price} DH \n
-
-
-
 
 📌 المرجو تأكيد عنوانكم : ${address}`;
             return `https://wa.me/${clean}?text=${encodeURIComponent(msg)}`;
