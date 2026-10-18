@@ -85,6 +85,7 @@
                     </div>
                 </div>
 
+                <!-- خانات الماليات الجديدة -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-indigo-900 text-white p-5 rounded-2xl shadow-md">
                     <div class="bg-white/10 p-3.5 rounded-xl border border-white/10">
                         <span class="text-xs text-indigo-200 font-semibold">المجموع الصافي الإجمالي</span>
@@ -98,11 +99,11 @@
                     </div>
                     <div class="bg-white/10 p-3.5 rounded-xl border border-white/10 flex flex-col justify-between">
                         <div>
-                            <span class="text-xs text-indigo-200 font-semibold">المال المتبقي عند اللفرور</span>
+                            <span class="text-xs text-indigo-200 font-semibold">المال المتبقي عند اللفرور (الصافي)</span>
                             <div id="box-courier-debt" class="text-2xl font-extrabold text-rose-300 mt-1">0.00 د.م</div>
                         </div>
                         <button onclick="settleCourierDebt()" class="mt-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold py-1.5 px-3 rounded-lg transition active-scale text-center">
-                            💰 استلمت المال من اللفرور (تصفير)
+                            💰 استلمت المال
                         </button>
                     </div>
                 </div>
@@ -282,7 +283,7 @@
         localStorage.setItem('DELIVERY_ROOM_CODE', roomCode);
 
         const ORDERS_KEY = `ORDERS_DATA_${roomCode}`;
-        const COLORS_KEY = `COLORS_DATA_${roomCode}_v3`; // مفتاح جديد لتحديث الأسماء إجبارياً
+        const COLORS_KEY = `COLORS_DATA_${roomCode}_v5`;
         const TX_KEY = `TX_DATA_${roomCode}`;
         const COURIER_DEBT_KEY = `COURIER_DEBT_${roomCode}`;
         const NTFY_TOPIC = `simo_delivery_sync_${roomCode}`;
@@ -464,7 +465,9 @@
                 });
             }
 
-            courierDebt += Number(order.price);
+            // اللفرور يأخذ ثمن التوصيل ويرسل لك الباقي (ثمن الطلب - ثمن التوصيل)
+            const netAmountToSendToSeller = Number(order.price) - Number(order.deliveryFee || 20);
+            courierDebt += netAmountToSendToSeller;
 
             activeActionId = null;
             saveAll();
@@ -476,7 +479,7 @@
                 alert('لا توجد مبالغ مالية متراكمة عند اللفرور حالياً.');
                 return;
             }
-            if (confirm(`هل أنت متأكد أنك استلمت المبلغ كاملاً (${courierDebt.toFixed(2)} د.م) من اللفرور وتريد تصفيته؟`)) {
+            if (confirm(`هل أنت متأكد أنك استلمت المبلغ صافي (${courierDebt.toFixed(2)} د.م) من اللفرور وتريد تصفيته؟`)) {
                 courierDebt = 0;
                 saveAll();
                 renderUI();
