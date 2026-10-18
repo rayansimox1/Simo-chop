@@ -85,7 +85,6 @@
                     </div>
                 </div>
 
-                <!-- خانات الماليات المحدثة (حذف المجموع الصافي اليومي وإضافة الحسابات الجديدة) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-indigo-900 text-white p-5 rounded-2xl shadow-md">
                     <div class="bg-white/10 p-3.5 rounded-xl border border-white/10">
                         <span class="text-xs text-indigo-200 font-semibold">المجموع الصافي الإجمالي</span>
@@ -278,7 +277,7 @@
         localStorage.setItem('DELIVERY_ROOM_CODE', roomCode);
 
         const ORDERS_KEY = `ORDERS_DATA_${roomCode}`;
-        const COLORS_KEY = `COLORS_DATA_${roomCode}_v6`;
+        const COLORS_KEY = `COLORS_DATA_${roomCode}_v7`;
         const TX_KEY = `TX_DATA_${roomCode}`;
         const COURIER_DEBT_KEY = `COURIER_DEBT_${roomCode}`;
         const NTFY_TOPIC = `simo_delivery_sync_${roomCode}`;
@@ -466,10 +465,7 @@
         }
 
         function settleCourierDebt() {
-            // تصفير المال المتبقي عند اللفرور (اعتبار أنك استلمت المبالغ اليومية الصافية)
             if (confirm(`هل أنت متأكد من تصفير الحساب واستلام الأموال من اللفرور؟`)) {
-                // نقوم بتسجيل أن طلبات اليوم تم توريد أموالها أو تصفير المؤشر اليومي
-                // سنقوم بتحديث وقت آخر تصفير في الذاكرة لتجاهل طلبات اليوم القديمة في حساب ذمة اللفرور
                 localStorage.setItem(`SETTLED_TIME_${roomCode}`, Date.now().toString());
                 renderUI();
             }
@@ -536,7 +532,6 @@
             const todayStr = new Date().toDateString();
             const settledTime = parseInt(localStorage.getItem(`SETTLED_TIME_${roomCode}`) || '0');
 
-            // تصفية الطلبات المسلمة اليوم فقط لحساب "المحصل اليومي"
             const deliveredToday = deliveredOrders.filter(o => {
                 const oDate = o.deliveredAt ? new Date(o.deliveredAt).toDateString() : '';
                 return oDate === todayStr;
@@ -545,13 +540,11 @@
             const dailyRevenue = deliveredToday.reduce((sum, o) => sum + Number(o.price), 0);
             const dailyDeliveryFees = deliveredToday.reduce((sum, o) => sum + Number(o.deliveryFee || 20), 0);
             
-            // المال المتبقي عند اللفرور = المحصل اليومي ناقص ثمن التوصيل (للطلبات التي لم يتم تصفيرها بعد)
             const unsettledToday = deliveredToday.filter(o => (o.deliveredAt || 0) > settledTime);
             const unsettledRevenue = unsettledToday.reduce((sum, o) => sum + Number(o.price), 0);
             const unsettledDelivery = unsettledToday.reduce((sum, o) => sum + Number(o.deliveryFee || 20), 0);
             const courierRemainingMoney = unsettledRevenue - unsettledDelivery;
 
-            // إجمالي المجموع الصافي الإجمالي للأرباح الكلية
             let totalNetProfit = 0;
             transactions.forEach(t => {
                 totalNetProfit += Number(t.profit || 0);
@@ -562,12 +555,10 @@
             document.getElementById('statDelivered').textContent = deliveredOrders.length;
             document.getElementById('statRefused').textContent = refusedCount;
             
-            // عرض المحصل اليومي
             document.getElementById('statRevenue').textContent = dailyRevenue.toLocaleString();
             document.getElementById('statNetRevenue').textContent = (dailyRevenue - dailyDeliveryFees).toLocaleString();
             document.getElementById('statDeliveryFees').textContent = dailyDeliveryFees.toLocaleString();
 
-            // تعبئة خانات المجموع الصافي الإجمالي والمال المتبقي عند اللفرور
             document.getElementById('box-net-total').textContent = `${totalNetProfit.toFixed(2)} د.م`;
             document.getElementById('box-courier-debt').textContent = `${courierRemainingMoney.toFixed(2)} د.م`;
 
@@ -592,6 +583,11 @@
                         <a href="tel:${order.phone}" class="font-bold text-indigo-600" dir="ltr">📞 ${order.phone}</a>
                         <span class="font-extrabold text-slate-800">${order.price} د.م</span>
                     </div>
+                    ${order.status === 'refused' && order.refusalReason ? `
+                        <div class="mt-3 bg-rose-50 border border-rose-200 rounded-lg p-2.5 text-xs text-rose-800">
+                            <strong>سبب الرفض من اللفرور:</strong> ${order.refusalReason}
+                        </div>
+                    ` : ''}
                 </div>
             `).join('');
         }
