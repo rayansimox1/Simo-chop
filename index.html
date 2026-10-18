@@ -21,7 +21,6 @@
 </head>
 <body class="min-h-screen pb-20 transition-colors duration-300 bg-slate-100 text-slate-800" id="appBody">
 
-    <!-- حاوية الإشعارات المنبثقة البصرية -->
     <div id="toastContainer" class="fixed top-20 left-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
     <!-- ================= واجهة البائع الشاملة ================= -->
@@ -49,7 +48,6 @@
             </div>
         </header>
 
-        <!-- التنقل بين أقسام البائع -->
         <div class="bg-white border-b px-4 py-2 flex gap-2 sticky top-[73px] z-40 shadow-sm">
             <button onclick="switchSellerTab('delivery')" id="stab-delivery" class="px-4 py-2 rounded-xl font-bold text-xs bg-indigo-600 text-white transition">📦 إدارة التوصيل</button>
             <button onclick="switchSellerTab('inventory')" id="stab-inventory" class="px-4 py-2 rounded-xl font-bold text-xs bg-slate-100 text-slate-700 transition">☂️ المخزون والأسعار</button>
@@ -58,9 +56,7 @@
 
         <main class="max-w-4xl mx-auto px-4 mt-6">
             
-            <!-- قسم إدارة التوصيل -->
             <div id="seller-tab-delivery" class="space-y-6">
-                <!-- الإحصائيات السريعة -->
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                     <div class="bg-white p-4 rounded-xl shadow-sm border-r-4 border-amber-500">
                         <p class="text-xs text-slate-500 font-bold">قيد الانتظار</p>
@@ -89,7 +85,6 @@
                     </div>
                 </div>
 
-                <!-- خانات الماليات الجديدة المطلوبة في واجهة البائع -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-indigo-900 text-white p-5 rounded-2xl shadow-md">
                     <div class="bg-white/10 p-3.5 rounded-xl border border-white/10">
                         <span class="text-xs text-indigo-200 font-semibold">المجموع الصافي الإجمالي</span>
@@ -113,13 +108,12 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- نموذج إضافة طلب -->
                     <div class="lg:col-span-1">
                         <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-100 sticky top-36">
                             <h2 class="text-lg font-bold text-slate-800 mb-4">➕ إضافة طلب وتوصيل</h2>
                             <form id="orderForm" class="space-y-3">
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">اختر المنتج / اللون *</label>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">اختر المنتج *</label>
                                     <select id="orderProductSelect" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                                     </select>
                                 </div>
@@ -153,7 +147,6 @@
                         </div>
                     </div>
 
-                    <!-- قائمة طلبات البائع -->
                     <div class="lg:col-span-2">
                         <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-100">
                             <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
@@ -171,7 +164,6 @@
                 </div>
             </div>
 
-            <!-- قسم المخزون والأسعار -->
             <div id="seller-tab-inventory" class="space-y-4 hidden">
                 <div class="flex items-center justify-between">
                     <h2 class="text-base font-bold text-slate-800">إدارة المخزون والأسعار</h2>
@@ -182,7 +174,6 @@
                 <div id="inventory-list" class="space-y-2.5"></div>
             </div>
 
-            <!-- قسم تقارير المداخيل -->
             <div id="seller-tab-stats" class="space-y-4 hidden">
                 <div class="bg-white p-5 rounded-2xl border shadow-sm space-y-4">
                     <h3 class="text-sm font-bold text-slate-800">ملخص الأرباح والمخزون المتبقي</h3>
@@ -274,14 +265,15 @@
     </div>
 
     <script>
-        const DEFAULT_COLORS = [
-            { id: 'black', name: 'أسود', stock: 117, cost: 75, price: 130, hex: '#1e293b' },
-            { id: 'black_2', name: 'منيطة', stock: 120, cost: 55, price: 120, hex: '#334155' },
-            { id: 'blue', name: 'أزرق', stock: 97, cost: 75, price: 130, hex: '#2563eb' },
-            { id: 'gray', name: 'رمادي', stock: 78, cost: 75, price: 130, hex: '#64748b' },
-            { id: 'white', name: 'أبيض', stock: 71, cost: 75, price: 130, hex: '#f8fafc', border: true },
-            { id: 'pink', name: 'وردي', stock: 65, cost: 75, price: 130, hex: '#ec4899' },
-            { id: 'green', name: 'أخضر', stock: 53, cost: 75, price: 130, hex: '#16a34a' }
+        const UPDATED_COLORS = [
+            { id: 'black', name: 'مظلة باللون الأسود', stock: 117, cost: 0, price: 130, hex: '#1e293b' },
+            { id: 'black_2', name: 'منيطة باللون الأسود', stock: 120, cost: 0, price: 120, hex: '#334155' },
+            { id: 'white_2', name: 'منيطة باللون الأبيض', stock: 50, cost: 0, price: 120, hex: '#f8fafc', border: true },
+            { id: 'blue', name: 'مظلة باللون الأزرق', stock: 97, cost: 0, price: 130, hex: '#2563eb' },
+            { id: 'gray', name: 'مظلة باللون الرمادي', stock: 78, cost: 0, price: 130, hex: '#64748b' },
+            { id: 'white', name: 'مظلة باللون الرمادي', stock: 71, cost: 0, price: 130, hex: '#94a3b8' },
+            { id: 'pink', name: 'مظلة باللون الوردي', stock: 65, cost: 0, price: 130, hex: '#ec4899' },
+            { id: 'green', name: 'مظلة باللون الزيتي', stock: 53, cost: 0, price: 130, hex: '#16a34a' }
         ];
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -290,13 +282,13 @@
         localStorage.setItem('DELIVERY_ROOM_CODE', roomCode);
 
         const ORDERS_KEY = `ORDERS_DATA_${roomCode}`;
-        const COLORS_KEY = `COLORS_DATA_${roomCode}`;
+        const COLORS_KEY = `COLORS_DATA_${roomCode}_v3`; // مفتاح جديد لتحديث الأسماء إجبارياً
         const TX_KEY = `TX_DATA_${roomCode}`;
         const COURIER_DEBT_KEY = `COURIER_DEBT_${roomCode}`;
         const NTFY_TOPIC = `simo_delivery_sync_${roomCode}`;
 
         let orders = JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
-        let colors = JSON.parse(localStorage.getItem(COLORS_KEY) || JSON.stringify(DEFAULT_COLORS));
+        let colors = JSON.parse(localStorage.getItem(COLORS_KEY) || JSON.stringify(UPDATED_COLORS));
         let transactions = JSON.parse(localStorage.getItem(TX_KEY) || '[]');
         let courierDebt = parseFloat(localStorage.getItem(COURIER_DEBT_KEY) || '0');
         
@@ -345,12 +337,10 @@
                             const parsed = JSON.parse(msg.message);
                             if (parsed && parsed.orders) {
                                 orders = parsed.orders;
-                                colors = parsed.colors || colors;
                                 transactions = parsed.transactions || transactions;
                                 courierDebt = parsed.courierDebt !== undefined ? parsed.courierDebt : courierDebt;
                                 
                                 localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-                                localStorage.setItem(COLORS_KEY, JSON.stringify(colors));
                                 localStorage.setItem(TX_KEY, JSON.stringify(transactions));
                                 localStorage.setItem(COURIER_DEBT_KEY, courierDebt.toString());
                                 renderUI();
@@ -372,12 +362,10 @@
                         const parsed = JSON.parse(data.message);
                         if (parsed && parsed.orders) {
                             orders = parsed.orders;
-                            colors = parsed.colors || colors;
                             transactions = parsed.transactions || transactions;
                             courierDebt = parsed.courierDebt !== undefined ? parsed.courierDebt : courierDebt;
 
                             localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-                            localStorage.setItem(COLORS_KEY, JSON.stringify(colors));
                             localStorage.setItem(TX_KEY, JSON.stringify(transactions));
                             localStorage.setItem(COURIER_DEBT_KEY, courierDebt.toString());
                             if (!activeActionId) renderUI();
@@ -449,14 +437,13 @@
             });
         }
 
-        // عند تأكيد التسليم من اللفرور
         async function markDelivered(id) {
             const idx = orders.findIndex(o => o.id === id);
             if (idx === -1) return;
 
             const order = orders[idx];
             order.status = 'delivered';
-            order.deliveredAt = Date.now(); // لتحديد وقت اليوم
+            order.deliveredAt = Date.now();
 
             const prod = colors.find(c => c.id === order.productId);
             if (prod) {
@@ -477,7 +464,6 @@
                 });
             }
 
-            // إضافة الثمن الإجمالي للمال المتبقي عند اللفرور
             courierDebt += Number(order.price);
 
             activeActionId = null;
@@ -485,7 +471,6 @@
             renderUI();
         }
 
-        // زر تصفير مال اللفرور عندما يسلمه لك
         function settleCourierDebt() {
             if (courierDebt <= 0) {
                 alert('لا توجد مبالغ مالية متراكمة عند اللفرور حالياً.');
@@ -560,7 +545,6 @@
             const totalDeliveryFees = deliveredOrders.reduce((sum, o) => sum + Number(o.deliveryFee || 20), 0);
             const netRevenue = totalRevenue - totalDeliveryFees;
 
-            // حساب المجموع الصافي الإجمالي ومجموع اليوم والصافي
             let totalNetProfit = 0;
             let dailyNetProfit = 0;
             const todayStr = new Date().toDateString();
@@ -581,7 +565,6 @@
             document.getElementById('statNetRevenue').textContent = netRevenue.toLocaleString();
             document.getElementById('statDeliveryFees').textContent = totalDeliveryFees.toLocaleString();
 
-            // تعبئة الخانات الجديدة المطلوبة
             document.getElementById('box-net-total').textContent = `${totalNetProfit.toFixed(2)} د.م`;
             document.getElementById('box-net-daily').textContent = `${dailyNetProfit.toFixed(2)} د.م`;
             document.getElementById('box-courier-debt').textContent = `${courierDebt.toFixed(2)} د.م`;
@@ -776,7 +759,7 @@
 
         window.addEventListener('storage', () => {
             orders = JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
-            colors = JSON.parse(localStorage.getItem(COLORS_KEY) || JSON.stringify(DEFAULT_COLORS));
+            colors = JSON.parse(localStorage.getItem(COLORS_KEY) || JSON.stringify(UPDATED_COLORS));
             courierDebt = parseFloat(localStorage.getItem(COURIER_DEBT_KEY) || '0');
             if (!activeActionId) renderUI();
         });
