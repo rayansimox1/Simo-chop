@@ -285,7 +285,7 @@
         localStorage.setItem('DELIVERY_ROOM_CODE', roomCode);
 
         const ORDERS_KEY = `ORDERS_DATA_${roomCode}`;
-        const COLORS_KEY = `COLORS_DATA_${roomCode}_v10`;
+        const COLORS_KEY = `COLORS_DATA_${roomCode}_v11`;
         const TX_KEY = `TX_DATA_${roomCode}`;
         const COURIER_DEBT_KEY = `COURIER_DEBT_${roomCode}`;
         const COURIER_NAME_KEY = `COURIER_NAME_${roomCode}`;
@@ -306,7 +306,6 @@
             document.getElementById('courierView').classList.remove('hidden');
             document.title = 'صفحة اللفرور - الطلبات قيد الانتظار';
 
-            // التحقق من اسم اللفرور أو طلبه إن لم يكن مسجلاً
             let courierName = localStorage.getItem(COURIER_NAME_KEY);
             if (!courierName || courierName.trim() === '') {
                 courierName = prompt('المرجو إدخال اسمك (اللفرور):', 'اللفرور');
@@ -484,10 +483,10 @@
             saveAll();
             renderUI();
 
-            // إرسال رسالة واتساب تلقائية للبائع على الرقم +212660005716
+            // إرسال رسالة واتساب بالشكل المطلوب تماماً
             const courierName = localStorage.getItem(COURIER_NAME_KEY) || 'اللفرور';
             const sellerWhatsAppNumber = '212660005716';
-            const waMsg = `✅ *تم التسليم بنجاح بواسطة (${courierName})*\n\n📦 *المنتج:* ${order.productName}\n📍 *العنوان:* ${order.address}\n📞 *هاتف المستلم:* ${order.phone}\n💰 *ثمن المنتج:* ${order.price} د.م`;
+            const waMsg = `السلام عليكم \nمعكم ${courierName} \nكنتواصلو معكم بخصوص طلبكم ${order.productName} \nالمبلغ المستحق ${order.price} د.م \nالمرجو تأكيد عنوانكم ${order.address}`;
             
             const waUrl = `https://wa.me/${sellerWhatsAppNumber}?text=${encodeURIComponent(waMsg)}`;
             window.open(waUrl, '_blank');
