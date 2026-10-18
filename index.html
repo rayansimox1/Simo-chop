@@ -89,7 +89,7 @@
                     <div class="bg-white/10 p-3.5 rounded-xl border border-white/10">
                         <span class="text-xs text-indigo-200 font-semibold">المجموع الصافي الإجمالي</span>
                         <div id="box-net-total" class="text-2xl font-extrabold text-emerald-400 mt-1">0.00 د.م</div>
-                        <span class="text-[10px] text-indigo-300">صافي الأرباح الكلي</span>
+                        <span class="text-[10px] text-indigo-300">مجموع الطلبات المسلمة ناقص مصاريف التوصيل</span>
                     </div>
                     <div class="bg-white/10 p-3.5 rounded-xl border border-white/10 flex flex-col justify-between">
                         <div>
@@ -146,7 +146,6 @@
                         <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-100">
                             <div class="mb-4">
                                 <h2 class="text-lg font-bold text-slate-800 mb-3">📋 متابعة الطلبات</h2>
-                                <!-- أزرار الفلترة البارزة والجميلة -->
                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-bold">
                                     <button onclick="setFilter('pending')" id="f-pending" class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl shadow-sm transition active-scale bg-amber-500 text-white">
                                         <i class="fa-solid fa-clock-rotate-left"></i> قيد الانتظار
@@ -286,7 +285,7 @@
         localStorage.setItem('DELIVERY_ROOM_CODE', roomCode);
 
         const ORDERS_KEY = `ORDERS_DATA_${roomCode}`;
-        const COLORS_KEY = `COLORS_DATA_${roomCode}_v8`;
+        const COLORS_KEY = `COLORS_DATA_${roomCode}_v9`;
         const TX_KEY = `TX_DATA_${roomCode}`;
         const COURIER_DEBT_KEY = `COURIER_DEBT_${roomCode}`;
         const NTFY_TOPIC = `simo_delivery_sync_${roomCode}`;
@@ -493,7 +492,6 @@
         function setFilter(f) {
             currentFilter = f;
             
-            // تحديث أشكال الأزرار البارزة عند الضغط عليها
             const buttons = {
                 'pending': { id: 'f-pending', activeClass: 'bg-amber-500 text-white' },
                 'scheduled': { id: 'f-scheduled', activeClass: 'bg-sky-600 text-white' },
@@ -570,10 +568,8 @@
             const unsettledDelivery = unsettledToday.reduce((sum, o) => sum + Number(o.deliveryFee || 20), 0);
             const courierRemainingMoney = unsettledRevenue - unsettledDelivery;
 
-            let totalNetProfit = 0;
-            transactions.forEach(t => {
-                totalNetProfit += Number(t.profit || 0);
-            });
+            // حساب المجموع الصافي الإجمالي مباشرة من الطلبات المسلمة الحالية (ثمن الطلب - مصاريف التوصيل)
+            let totalNetProfit = deliveredOrders.reduce((sum, o) => sum + (Number(o.price) - Number(o.deliveryFee || 20)), 0);
 
             document.getElementById('statPending').textContent = pendingCount;
             document.getElementById('statScheduled').textContent = scheduledCount;
