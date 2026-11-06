@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="store-data.js" onerror="console.log('No external store-data.js yet')"></script>
     <style>
         body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; }
         .tab-active { background-color: #0f172a; color: white; }
@@ -24,16 +25,19 @@
                     <i class="fa-solid fa-sliders"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg text-gray-900">لوحة تحكم المتجر</h1>
-                    <p class="text-xs text-gray-500">تحكم كامل في الهوية، الألوان، الفئات والمنتجات</p>
+                    <h1 class="font-bold text-lg text-gray-900">لوحة تحكم المتجر المطورة</h1>
+                    <p class="text-xs text-gray-500">تحكم كامل في الهوية، الألوان، الفئات والمنتجات مع النشر المباشر</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-2 flex-wrap">
-                <button onclick="saveAllData()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow transition">
+                <button onclick="saveAllData(true)" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow transition">
                     <i class="fa-solid fa-floppy-disk"></i> حفظ وتحديث المعاينة
                 </button>
-                <button onclick="exportDataJSON()" class="bg-gray-800 hover:bg-black text-white px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition" title="حفظ نسخة احتياطية من البيانات">
+                <button onclick="exportStoreDataJS()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow transition" title="ضع هذا الملف بجانب index.html ليظهر التعديل لكل الزبناء">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> تحميل store-data.js للنشر
+                </button>
+                <button onclick="exportDataJSON()" class="bg-gray-800 hover:bg-black text-white px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition" title="حفظ نسخة احتياطية JSON">
                     <i class="fa-solid fa-download"></i> تصدير JSON
                 </button>
                 <label class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition">
@@ -45,6 +49,11 @@
                 </button>
             </div>
         </header>
+
+        <!-- إشعار الحفظ -->
+        <div id="saveToast" class="hidden bg-emerald-600 text-white text-xs font-bold px-4 py-2 text-center transition">
+            تم حفظ التعديلات وتحديث المعاينة الحية بنجاح!
+        </div>
 
         <!-- التبويبات (Tabs) -->
         <div class="bg-white border-b px-6 py-2 flex gap-2 overflow-x-auto">
@@ -72,30 +81,33 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1">اسم المتجر</label>
-                        <input type="text" id="storeName" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm">
+                        <input type="text" id="storeName" oninput="saveAllData()" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1">العملة (مثلاً: MAD, €, $)</label>
-                        <input type="text" id="storeCurrency" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm">
+                        <input type="text" id="storeCurrency" oninput="saveAllData()" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm">
                     </div>
                     <div class="md:col-span-2">
                         <label class="block text-xs font-bold text-gray-700 mb-1">الوصف المختصر (Bio)</label>
-                        <input type="text" id="storeBio" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm">
+                        <input type="text" id="storeBio" oninput="saveAllData()" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1">رابط أو اسم صورة اللوغو (Logo)</label>
-                        <input type="text" id="storeLogo" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm" dir="ltr">
+                        <input type="text" id="storeLogo" oninput="saveAllData()" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm" dir="ltr">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1">رابط أو اسم صورة الغلاف (Cover)</label>
-                        <input type="text" id="storeCover" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm" dir="ltr">
+                        <input type="text" id="storeCover" oninput="saveAllData()" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm" dir="ltr">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">نص زر اللغة في الأعلى</label>
-                        <input type="text" id="storeLangBadge" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm">
+                        <label class="block text-xs font-bold text-gray-700 mb-1">اللغة الافتراضية للمتجر</label>
+                        <select id="storeLangBadge" onchange="saveAllData()" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm">
+                            <option value="🇫🇷 FR">الفرنسية (🇫🇷 FR)</option>
+                            <option value="🇲🇦 AR">العربية (🇲🇦 AR)</option>
+                        </select>
                     </div>
                     <div class="flex items-center gap-3 pt-6">
-                        <input type="checkbox" id="storeVerified" class="w-5 h-5 accent-blue-600 rounded">
+                        <input type="checkbox" id="storeVerified" onchange="saveAllData()" class="w-5 h-5 accent-blue-600 rounded">
                         <label for="storeVerified" class="text-sm font-bold text-gray-700">إظهار شارة التوثيق الزرقاء <i class="fa-solid fa-circle-check text-blue-500"></i></label>
                     </div>
                 </div>
@@ -103,16 +115,16 @@
                 <h2 class="text-base font-bold border-b pb-3 pt-4 text-gray-800"><i class="fa-solid fa-share-nodes ml-2 text-green-600"></i>أرقام التواصل والروابط</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1">رقم الواتساب للطلبات (مع رمز الدولة بدون +)</label>
-                        <input type="text" id="storeWhatsapp" placeholder="212600000000" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm" dir="ltr">
+                        <label class="block text-xs font-bold text-gray-700 mb-1">رقم الواتساب للطلبات (مع رمز الدولة)</label>
+                        <input type="text" id="storeWhatsapp" oninput="saveAllData()" placeholder="212600000000" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm" dir="ltr">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1">رقم الهاتف للاتصال المباشر</label>
-                        <input type="text" id="storePhone" placeholder="+212600000000" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm" dir="ltr">
+                        <input type="text" id="storePhone" oninput="saveAllData()" placeholder="+212600000000" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm" dir="ltr">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1">رابط حساب انستغرام</label>
-                        <input type="text" id="storeInstagram" placeholder="https://instagram.com/..." class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm" dir="ltr">
+                        <input type="text" id="storeInstagram" oninput="saveAllData()" placeholder="https://instagram.com/..." class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm" dir="ltr">
                     </div>
                 </div>
             </div>
@@ -121,51 +133,51 @@
             <div id="tab-design" class="tab-content hidden bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-5">
                 <h2 class="text-base font-bold border-b pb-3 text-gray-800"><i class="fa-solid fa-wand-magic-sparkles ml-2 text-purple-600"></i>تخصيص الألوان والمظهر العام</h2>
                 
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="p-3 border rounded-xl flex items-center justify-between bg-gray-50">
                         <div>
-                            <p class="text-xs font-bold text-gray-800">اللون الأساسي (Primary)</p>
-                            <p class="text-[11px] text-gray-500">الأزرار، الفئة النشطة، السلة</p>
+                            <p class="text-xs font-bold text-gray-800">اللون الأساسي</p>
+                            <p class="text-[11px] text-gray-500">الأزرار والسلة</p>
                         </div>
-                        <input type="color" id="designPrimaryColor" class="w-10 h-10 rounded cursor-pointer border-0">
+                        <input type="color" id="designPrimaryColor" oninput="saveAllData()" class="w-10 h-10 rounded cursor-pointer border-0">
                     </div>
 
                     <div class="p-3 border rounded-xl flex items-center justify-between bg-gray-50">
                         <div>
-                            <p class="text-xs font-bold text-gray-800">لون أزرار الطلب والواتساب</p>
-                            <p class="text-[11px] text-gray-500">زر إتمام الطلب والأيقونات</p>
+                            <p class="text-xs font-bold text-gray-800">لون زر الطلب</p>
+                            <p class="text-[11px] text-gray-500">زر الواتساب</p>
                         </div>
-                        <input type="color" id="designAccentColor" class="w-10 h-10 rounded cursor-pointer border-0">
+                        <input type="color" id="designAccentColor" oninput="saveAllData()" class="w-10 h-10 rounded cursor-pointer border-0">
                     </div>
 
                     <div class="p-3 border rounded-xl flex items-center justify-between bg-gray-50">
                         <div>
-                            <p class="text-xs font-bold text-gray-800">لون شارة التخفيض (Promo)</p>
-                            <p class="text-[11px] text-gray-500">الشارة فوق صور المنتجات</p>
+                            <p class="text-xs font-bold text-gray-800">لون التخفيض</p>
+                            <p class="text-[11px] text-gray-500">شارة Promo</p>
                         </div>
-                        <input type="color" id="designPromoColor" class="w-10 h-10 rounded cursor-pointer border-0">
+                        <input type="color" id="designPromoColor" oninput="saveAllData()" class="w-10 h-10 rounded cursor-pointer border-0">
                     </div>
 
                     <div class="p-3 border rounded-xl flex items-center justify-between bg-gray-50">
                         <div>
-                            <p class="text-xs font-bold text-gray-800">لون خلفية الصفحة الخارجية</p>
-                            <p class="text-[11px] text-gray-500">الخلفية وراء المتجر</p>
+                            <p class="text-xs font-bold text-gray-800">لون الخلفية</p>
+                            <p class="text-[11px] text-gray-500">خلفية الصفحة</p>
                         </div>
-                        <input type="color" id="designBgColor" class="w-10 h-10 rounded cursor-pointer border-0">
+                        <input type="color" id="designBgColor" oninput="saveAllData()" class="w-10 h-10 rounded cursor-pointer border-0">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1">تخطيط عرض المنتجات (Grid)</label>
-                        <select id="designGridCols" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm">
+                        <select id="designGridCols" onchange="saveAllData()" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm">
                             <option value="2">عمودين (2 منتجات في السطر)</option>
                             <option value="1">عمود واحد (بطاقات كبيرة)</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1">حواف البطاقات والأزرار</label>
-                        <select id="designRadius" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm">
+                        <select id="designRadius" onchange="saveAllData()" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm">
                             <option value="rounded-2xl">دائرية ناعمة (افتراضي)</option>
                             <option value="rounded-none">حادة (مربعة)</option>
                             <option value="rounded-3xl">دائرية جداً</option>
@@ -173,7 +185,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1">الخط المستخدم (Font)</label>
-                        <select id="designFont" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm">
+                        <select id="designFont" onchange="saveAllData()" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm">
                             <option value="'Poppins', sans-serif">Poppins (عصري للفرنسية)</option>
                             <option value="'Cairo', sans-serif">Cairo (ممتاز للعربية والفرنسية)</option>
                             <option value="'Inter', sans-serif">Inter (بسيط وواضح)</option>
@@ -188,11 +200,11 @@
                     <h2 class="text-base font-bold text-gray-800"><i class="fa-solid fa-layer-group ml-2 text-orange-500"></i>إدارة الفئات (Catégories)</h2>
                 </div>
 
-                <div class="flex gap-2">
-                    <input type="text" id="newCatId" placeholder="الاسم البرمجي (مثال: Parapluies)" class="flex-1 p-2.5 bg-gray-50 border rounded-xl text-sm">
-                    <input type="text" id="newCatLabel" placeholder="الاسم المعروض مع إيموجي (مثال: ☔ Parapluies)" class="flex-1 p-2.5 bg-gray-50 border rounded-xl text-sm">
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="newCatId" placeholder="المعرف البرمجي (مثال: Parapluies)" class="flex-1 p-2.5 bg-gray-50 border rounded-xl text-sm">
+                    <input type="text" id="newCatLabel" placeholder="الاسم المعروض (مثال: ☔ Parapluies)" class="flex-1 p-2.5 bg-gray-50 border rounded-xl text-sm">
                     <button onclick="addCategory()" class="bg-black text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:opacity-90">
-                        <i class="fa-solid fa-plus"></i> إضافة
+                        <i class="fa-solid fa-plus"></i> إضافة فئة
                     </button>
                 </div>
 
@@ -201,10 +213,10 @@
 
             <!-- 4. قسم المنتجات -->
             <div id="tab-products" class="tab-content hidden space-y-5">
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-wrap justify-between items-center gap-3">
                     <div>
                         <h2 class="text-base font-bold text-gray-800">قائمة المنتجات</h2>
-                        <p class="text-xs text-gray-500">أضف، عدل أو احذف منتجاتك ومعرض الصور الخاص بكل منتج</p>
+                        <p class="text-xs text-gray-500">أضف، عدل، كرر أو حدد حالة توفر كل منتج</p>
                     </div>
                     <button onclick="openProductEditor()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow">
                         <i class="fa-solid fa-plus"></i> إضافة منتج جديد
@@ -221,10 +233,10 @@
     <div class="w-full lg:w-[420px] bg-gray-900 p-4 flex flex-col items-center justify-center border-r border-gray-800">
         <div class="w-full flex justify-between items-center text-white mb-3 px-2">
             <span class="text-xs font-bold flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse"></span> معاينة حية للمتجر
+                <span class="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse"></span> معاينة حية وفورية
             </span>
             <a href="index.html" target="_blank" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded-lg transition">
-                فتح في صفحة كاملة <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>
+                فتح في صفحة مستقلة <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>
             </a>
         </div>
         <div class="w-full max-w-[380px] h-[720px] bg-white rounded-[36px] border-8 border-gray-800 shadow-2xl overflow-hidden relative">
@@ -263,6 +275,11 @@
                     </div>
                 </div>
 
+                <div class="flex items-center gap-2 py-1">
+                    <input type="checkbox" id="editProdInStock" checked class="w-4 h-4 accent-green-600 rounded">
+                    <label for="editProdInStock" class="text-xs font-bold text-gray-700">المنتج متوفر في المخزون (متاح للطلب)</label>
+                </div>
+
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">الصورة الرئيسية (رابط أو اسم الملف) *</label>
                     <input type="text" id="editProdImg" placeholder="1000385822.jpg أو https://..." class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm" dir="ltr">
@@ -270,7 +287,7 @@
 
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-1">صور المعرض الإضافية (افصل بينها بفاصلة ,)</label>
-                    <textarea id="editProdGallery" rows="2" placeholder="1000385822.jpg, 1000385824.jpg, 1000385832.jpg" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm" dir="ltr"></textarea>
+                    <textarea id="editProdGallery" rows="2" placeholder="1000385822.jpg, 1000385824.jpg" class="w-full p-2.5 bg-gray-50 border rounded-xl text-sm" dir="ltr"></textarea>
                 </div>
 
                 <div>
@@ -289,7 +306,6 @@
     <script>
         const STORAGE_KEY = 'boka_store_config_v1';
 
-        // البيانات الافتراضية المطابقة لمتجرك الأصلي
         const defaultData = {
             store: {
                 name: "BOKA Store",
@@ -318,39 +334,37 @@
                 { id: "Packs", label: "🎁 Packs Promo" }
             ],
             products: [
-                { id: 1, name: "Parapluie Automatique - Noir Classique", category: "Parapluies", price: 149, oldPrice: 199, img: "1000385822.jpg", gallery: ["1000385822.jpg", "1000385824.jpg", "1000385832.jpg"], desc: "Parapluie pliable automatique ultra-résistant au vent avec revêtement imperméable et pochette incluse. Ouverture et fermeture d'une seule main." },
-                { id: 2, name: "Parapluie Automatique - Rose Poudré", category: "Parapluies", price: 149, oldPrice: 199, img: "1000385820.jpg", gallery: ["1000385820.jpg", "1000385828.jpg", "1000385822.jpg"], desc: "Design élégant en rose poudré. Protection anti-UV et imperméabilité supérieure avec bouton d'ouverture automatique." },
-                { id: 3, name: "Parapluie Automatique - Bleu Ardoise", category: "Parapluies", price: 149, oldPrice: 199, img: "1000385832.jpg", gallery: ["1000385832.jpg", "1000385822.jpg", "1000385824.jpg"], desc: "Couleur bleu Ardoise moderne, structure renforcée et séchage rapide. Livré avec sa housse de protection." },
-                { id: 4, name: "Parapluie Automatique - Vert Pistache", category: "Parapluies", price: 149, oldPrice: 199, img: "1000385826.jpg", gallery: ["1000385826.jpg", "1000385830.jpg", "1000385828.jpg"], desc: "Couleur fraîche et originale, format compact idéal pour le sac à main ou la voiture." },
-                { id: 5, name: "Parapluie Automatique - Gris Perle", category: "Parapluies", price: 149, oldPrice: 199, img: "1000385824.jpg", gallery: ["1000385824.jpg", "1000385822.jpg", "1000385828.jpg"], desc: "Gris perle sobre et chic. Poignée ergonomique avec dragonne et bouton automatique." },
-                { id: 6, name: "Parapluie Automatique - Vert Émeraude", category: "Parapluies", price: 149, oldPrice: 199, img: "1000385830.jpg", gallery: ["1000385830.jpg", "1000385826.jpg", "1000385822.jpg"], desc: "Vert émeraude profond avec finitions dorées sur la poignée. Haute résistance aux intempéries." },
-                { id: 7, name: "Parapluie Automatique - Beige Crème", category: "Parapluies", price: 149, oldPrice: 199, img: "1000385828.jpg", gallery: ["1000385828.jpg", "1000385820.jpg", "1000385824.jpg"], desc: "Teinte beige crème minimaliste et luxueuse. Parfait contre la pluie et le soleil." }
+                { id: 1, name: "Parapluie Automatique - Noir Classique", category: "Parapluies", price: 149, oldPrice: 199, inStock: true, img: "1000385822.jpg", gallery: ["1000385822.jpg", "1000385824.jpg", "1000385832.jpg"], desc: "Parapluie pliable automatique ultra-résistant au vent avec revêtement imperméable et pochette incluse. Ouverture et fermeture d'une seule main." },
+                { id: 2, name: "Parapluie Automatique - Rose Poudré", category: "Parapluies", price: 149, oldPrice: 199, inStock: true, img: "1000385820.jpg", gallery: ["1000385820.jpg", "1000385828.jpg", "1000385822.jpg"], desc: "Design élégant en rose poudré. Protection anti-UV et imperméabilité supérieure avec bouton d'ouverture automatique." },
+                { id: 3, name: "Parapluie Automatique - Bleu Ardoise", category: "Parapluies", price: 149, oldPrice: 199, inStock: true, img: "1000385832.jpg", gallery: ["1000385832.jpg", "1000385822.jpg", "1000385824.jpg"], desc: "Couleur bleu Ardoise moderne, structure renforcée et séchage rapide. Livré avec sa housse de protection." },
+                { id: 4, name: "Parapluie Automatique - Vert Pistache", category: "Parapluies", price: 149, oldPrice: 199, inStock: true, img: "1000385826.jpg", gallery: ["1000385826.jpg", "1000385830.jpg", "1000385828.jpg"], desc: "Couleur fraîche et originale, format compact idéal pour le sac à main ou la voiture." },
+                { id: 5, name: "Parapluie Automatique - Gris Perle", category: "Parapluies", price: 149, oldPrice: 199, inStock: true, img: "1000385824.jpg", gallery: ["1000385824.jpg", "1000385822.jpg", "1000385828.jpg"], desc: "Gris perle sobre et chic. Poignée ergonomique avec dragonne et bouton automatique." },
+                { id: 6, name: "Parapluie Automatique - Vert Émeraude", category: "Parapluies", price: 149, oldPrice: 199, inStock: true, img: "1000385830.jpg", gallery: ["1000385830.jpg", "1000385826.jpg", "1000385822.jpg"], desc: "Vert émeraude profond avec finitions dorées sur la poignée. Haute résistance aux intempéries." },
+                { id: 7, name: "Parapluie Automatique - Beige Crème", category: "Parapluies", price: 149, oldPrice: 199, inStock: true, img: "1000385828.jpg", gallery: ["1000385828.jpg", "1000385820.jpg", "1000385824.jpg"], desc: "Teinte beige crème minimaliste et luxueuse. Parfait contre la pluie et le soleil." }
             ]
         };
 
-        let appData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || JSON.parse(JSON.stringify(defaultData));
+        let appData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || window.EXTERNAL_STORE_DATA || JSON.parse(JSON.stringify(defaultData));
 
         function initAdmin() {
-            // تعبئة حقول المتجر
-            document.getElementById('storeName').value = appData.store.name;
-            document.getElementById('storeBio').value = appData.store.bio;
-            document.getElementById('storeLogo').value = appData.store.logo;
-            document.getElementById('storeCover').value = appData.store.cover;
-            document.getElementById('storeLangBadge').value = appData.store.langBadge;
-            document.getElementById('storeVerified').checked = appData.store.verified;
-            document.getElementById('storeCurrency').value = appData.store.currency;
-            document.getElementById('storeWhatsapp').value = appData.store.whatsapp;
-            document.getElementById('storePhone').value = appData.store.phone;
-            document.getElementById('storeInstagram').value = appData.store.instagram;
+            document.getElementById('storeName').value = appData.store.name || '';
+            document.getElementById('storeBio').value = appData.store.bio || '';
+            document.getElementById('storeLogo').value = appData.store.logo || '';
+            document.getElementById('storeCover').value = appData.store.cover || '';
+            document.getElementById('storeLangBadge').value = (appData.store.langBadge && appData.store.langBadge.includes('AR')) ? '🇲🇦 AR' : '🇫🇷 FR';
+            document.getElementById('storeVerified').checked = !!appData.store.verified;
+            document.getElementById('storeCurrency').value = appData.store.currency || 'MAD';
+            document.getElementById('storeWhatsapp').value = appData.store.whatsapp || '';
+            document.getElementById('storePhone').value = appData.store.phone || '';
+            document.getElementById('storeInstagram').value = appData.store.instagram || '';
 
-            // تعبئة حقول الديزاين
-            document.getElementById('designPrimaryColor').value = appData.design.primaryColor;
-            document.getElementById('designAccentColor').value = appData.design.accentColor;
-            document.getElementById('designPromoColor').value = appData.design.promoColor;
-            document.getElementById('designBgColor').value = appData.design.bgColor;
-            document.getElementById('designGridCols').value = appData.design.gridCols;
-            document.getElementById('designRadius').value = appData.design.cardRadius;
-            document.getElementById('designFont').value = appData.design.fontFamily;
+            document.getElementById('designPrimaryColor').value = appData.design.primaryColor || '#000000';
+            document.getElementById('designAccentColor').value = appData.design.accentColor || '#22c55e';
+            document.getElementById('designPromoColor').value = appData.design.promoColor || '#ef4444';
+            document.getElementById('designBgColor').value = appData.design.bgColor || '#f8fafc';
+            document.getElementById('designGridCols').value = appData.design.gridCols || '2';
+            document.getElementById('designRadius').value = appData.design.cardRadius || 'rounded-2xl';
+            document.getElementById('designFont').value = appData.design.fontFamily || "'Poppins', sans-serif";
 
             renderCategoriesAdmin();
             renderProductsAdmin();
@@ -358,16 +372,16 @@
 
         function collectFormValues() {
             appData.store = {
-                name: document.getElementById('storeName').value,
-                bio: document.getElementById('storeBio').value,
-                logo: document.getElementById('storeLogo').value,
-                cover: document.getElementById('storeCover').value,
+                name: document.getElementById('storeName').value.trim(),
+                bio: document.getElementById('storeBio').value.trim(),
+                logo: document.getElementById('storeLogo').value.trim(),
+                cover: document.getElementById('storeCover').value.trim(),
                 langBadge: document.getElementById('storeLangBadge').value,
                 verified: document.getElementById('storeVerified').checked,
-                currency: document.getElementById('storeCurrency').value || 'MAD',
-                whatsapp: document.getElementById('storeWhatsapp').value,
-                phone: document.getElementById('storePhone').value,
-                instagram: document.getElementById('storeInstagram').value
+                currency: document.getElementById('storeCurrency').value.trim() || 'MAD',
+                whatsapp: document.getElementById('storeWhatsapp').value.replace(/\D/g, ''),
+                phone: document.getElementById('storePhone').value.trim(),
+                instagram: document.getElementById('storeInstagram').value.trim()
             };
 
             appData.design = {
@@ -381,14 +395,23 @@
             };
         }
 
-        function saveAllData() {
+        function saveAllData(showNotification = false) {
             collectFormValues();
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            
+            // إرسال تحديث فوري لشاشة المعاينة بدون إعادة تحميل ثقيلة
             const frame = document.getElementById('previewFrame');
-            frame.contentWindow.location.reload();
+            if (frame && frame.contentWindow) {
+                frame.contentWindow.postMessage({ type: 'BOKA_UPDATE_CONFIG', payload: appData }, '*');
+            }
+
+            if (showNotification) {
+                const toast = document.getElementById('saveToast');
+                toast.classList.remove('hidden');
+                setTimeout(() => toast.classList.add('hidden'), 2500);
+            }
         }
 
-        // إدارة التبويبات
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => {
@@ -401,22 +424,22 @@
             activeBtn.classList.remove('text-gray-600');
         }
 
-        // إدارة الفئات
         function renderCategoriesAdmin() {
             const container = document.getElementById('categoriesList');
             container.innerHTML = '';
             appData.categories.forEach((cat, index) => {
+                const usedCount = appData.products.filter(p => p.category === cat.id).length;
                 container.innerHTML += `
                     <div class="flex items-center justify-between p-3 bg-gray-50 border rounded-xl">
                         <div class="flex items-center gap-3">
                             <span class="px-3 py-1 bg-black text-white rounded-full text-xs font-bold">${cat.label}</span>
-                            <span class="text-xs text-gray-400">المعرف: ${cat.id}</span>
+                            <span class="text-xs text-gray-500">المعرف: <strong>${cat.id}</strong> (${usedCount} منتجات)</span>
                         </div>
                         ${cat.id !== 'Tous' ? `
-                            <button onclick="deleteCategory(${index})" class="text-red-500 hover:bg-red-50 p-2 rounded-lg text-xs">
+                            <button onclick="deleteCategory(${index})" class="text-red-500 hover:bg-red-50 p-2 rounded-lg text-xs font-bold">
                                 <i class="fa-solid fa-trash"></i> حذف
                             </button>
-                        ` : '<span class="text-xs text-gray-400">أساسي</span>'}
+                        ` : '<span class="text-xs text-gray-400 font-bold">فئة أساسية</span>'}
                     </div>
                 `;
             });
@@ -426,51 +449,75 @@
             const id = document.getElementById('newCatId').value.trim();
             const label = document.getElementById('newCatLabel').value.trim();
             if (!id || !label) return alert('المرجو ملء المعرف والاسم المعروض');
+            if (appData.categories.some(c => c.id.toLowerCase() === id.toLowerCase())) {
+                return alert('هذا المعرف موجود مسبقاً!');
+            }
             appData.categories.push({ id, label });
             document.getElementById('newCatId').value = '';
             document.getElementById('newCatLabel').value = '';
             renderCategoriesAdmin();
-            saveAllData();
+            saveAllData(true);
         }
 
         function deleteCategory(index) {
+            const cat = appData.categories[index];
+            const affected = appData.products.filter(p => p.category === cat.id).length;
+            if (affected > 0) {
+                if (!confirm(`تنبيه: هناك ${affected} منتجات مرتبطة بفئة "${cat.label}". هل تريد حذف الفئة على أي حال؟`)) return;
+            }
             appData.categories.splice(index, 1);
             renderCategoriesAdmin();
-            saveAllData();
+            saveAllData(true);
         }
 
-        // إدارة المنتجات
         function renderProductsAdmin() {
             const list = document.getElementById('adminProductsList');
             document.getElementById('prodCountBadge').innerText = appData.products.length;
             list.innerHTML = '';
 
             appData.products.forEach(p => {
+                const isAvailable = p.inStock !== false;
                 list.innerHTML += `
-                    <div class="bg-white p-3.5 rounded-2xl border border-gray-100 shadow-sm flex gap-3 items-center justify-between">
+                    <div class="bg-white p-3.5 rounded-2xl border border-gray-100 shadow-sm flex gap-3 items-center justify-between ${!isAvailable ? 'opacity-60 bg-gray-50' : ''}">
                         <div class="flex items-center gap-3">
-                            <img src="${p.img}" class="w-16 h-16 rounded-xl object-cover bg-gray-100 border">
+                            <img src="${p.img}" onerror="this.src='https://placehold.co/100x100/f1f5f9/94a3b8?text=Img'" class="w-16 h-16 rounded-xl object-cover bg-gray-100 border">
                             <div>
-                                <span class="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-600">${p.category}</span>
-                                <h4 class="font-bold text-sm text-gray-900 mt-0.5">${p.name}</h4>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-[10px] bg-gray-100 px-2 py-0.5 rounded text-gray-600">${p.category}</span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded font-bold ${isAvailable ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}">
+                                        ${isAvailable ? 'متوفر' : 'نفذت الكمية'}
+                                    </span>
+                                </div>
+                                <h4 class="font-bold text-sm text-gray-900 mt-1">${p.name}</h4>
                                 <div class="flex items-center gap-2 mt-1">
                                     <span class="text-xs font-bold text-green-600">${p.price} ${appData.store.currency}</span>
                                     ${p.oldPrice ? `<span class="text-[10px] text-gray-400 line-through">${p.oldPrice}</span>` : ''}
-                                    <span class="text-[10px] text-gray-400"><i class="fa-regular fa-images"></i> ${p.gallery.length}</span>
+                                    <span class="text-[10px] text-gray-400"><i class="fa-regular fa-images"></i> ${(p.gallery || []).length}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="flex flex-col gap-1.5">
-                            <button onclick="openProductEditor(${p.id})" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1.5 rounded-lg text-xs font-bold">
+                            <button onclick="openProductEditor(${p.id})" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded-lg text-xs font-bold">
                                 <i class="fa-solid fa-pen"></i> تعديل
                             </button>
-                            <button onclick="deleteProduct(${p.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold">
+                            <button onclick="toggleProductStock(${p.id})" class="bg-amber-50 hover:bg-amber-100 text-amber-700 px-3 py-1 rounded-lg text-xs font-bold">
+                                <i class="fa-solid fa-box"></i> ${isAvailable ? 'إيقاف' : 'تفعيل'}
+                            </button>
+                            <button onclick="deleteProduct(${p.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1 rounded-lg text-xs font-bold">
                                 <i class="fa-solid fa-trash"></i> حذف
                             </button>
                         </div>
                     </div>
                 `;
             });
+        }
+
+        function toggleProductStock(id) {
+            const p = appData.products.find(item => item.id === id);
+            if (!p) return;
+            p.inStock = (p.inStock === false) ? true : false;
+            renderProductsAdmin();
+            saveAllData(true);
         }
 
         function openProductEditor(id = null) {
@@ -488,15 +535,17 @@
                 document.getElementById('editProdCategory').value = p.category;
                 document.getElementById('editProdPrice').value = p.price;
                 document.getElementById('editProdOldPrice').value = p.oldPrice || '';
+                document.getElementById('editProdInStock').checked = p.inStock !== false;
                 document.getElementById('editProdImg').value = p.img;
-                document.getElementById('editProdGallery').value = p.gallery.join(', ');
-                document.getElementById('editProdDesc').value = p.desc;
+                document.getElementById('editProdGallery').value = (p.gallery || []).join(', ');
+                document.getElementById('editProdDesc').value = p.desc || '';
             } else {
                 document.getElementById('editorModalTitle').innerText = 'إضافة منتج جديد';
                 document.getElementById('editProdId').value = '';
                 document.getElementById('editProdName').value = '';
                 document.getElementById('editProdPrice').value = '';
                 document.getElementById('editProdOldPrice').value = '';
+                document.getElementById('editProdInStock').checked = true;
                 document.getElementById('editProdImg').value = '';
                 document.getElementById('editProdGallery').value = '';
                 document.getElementById('editProdDesc').value = '';
@@ -516,6 +565,7 @@
             const price = Number(document.getElementById('editProdPrice').value);
             const oldPriceVal = document.getElementById('editProdOldPrice').value;
             const oldPrice = oldPriceVal ? Number(oldPriceVal) : null;
+            const inStock = document.getElementById('editProdInStock').checked;
             const img = document.getElementById('editProdImg').value.trim();
             const galleryRaw = document.getElementById('editProdGallery').value;
             const gallery = galleryRaw ? galleryRaw.split(',').map(s => s.trim()).filter(Boolean) : [img];
@@ -526,26 +576,40 @@
             if (id) {
                 const index = appData.products.findIndex(p => p.id == id);
                 if (index > -1) {
-                    appData.products[index] = { id: Number(id), name, category, price, oldPrice, img, gallery, desc };
+                    appData.products[index] = { id: Number(id), name, category, price, oldPrice, inStock, img, gallery, desc };
                 }
             } else {
                 const newId = appData.products.length ? Math.max(...appData.products.map(p => p.id)) + 1 : 1;
-                appData.products.push({ id: newId, name, category, price, oldPrice, img, gallery, desc });
+                appData.products.push({ id: newId, name, category, price, oldPrice, inStock, img, gallery, desc });
             }
 
             closeProductEditor();
             renderProductsAdmin();
-            saveAllData();
+            renderCategoriesAdmin();
+            saveAllData(true);
         }
 
         function deleteProduct(id) {
             if (!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
             appData.products = appData.products.filter(p => p.id !== id);
             renderProductsAdmin();
-            saveAllData();
+            renderCategoriesAdmin();
+            saveAllData(true);
         }
 
-        // تصدير واستيراد الإعدادات
+        // تصدير ملف store-data.js للنشر المباشر مع index.html
+        function exportStoreDataJS() {
+            collectFormValues();
+            const jsContent = `window.EXTERNAL_STORE_DATA = ${JSON.stringify(appData, null, 2)};\n`;
+            const blob = new Blob([jsContent], { type: "application/javascript;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", url);
+            dlAnchor.setAttribute("download", "store-data.js");
+            dlAnchor.click();
+            URL.revokeObjectURL(url);
+        }
+
         function exportDataJSON() {
             collectFormValues();
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
@@ -562,13 +626,14 @@
             reader.onload = function(e) {
                 try {
                     const imported = JSON.parse(e.target.result);
+                    if (!imported.store || !imported.products) throw new Error('Invalid format');
                     appData = imported;
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
                     initAdmin();
-                    saveAllData();
+                    saveAllData(true);
                     alert('تم استيراد بيانات المتجر بنجاح!');
                 } catch (err) {
-                    alert('ملف JSON غير صالح');
+                    alert('ملف JSON غير صالح أو لا يطابق هيكل المتجر');
                 }
             };
             reader.readAsText(file);
@@ -579,7 +644,7 @@
             localStorage.removeItem(STORAGE_KEY);
             appData = JSON.parse(JSON.stringify(defaultData));
             initAdmin();
-            saveAllData();
+            saveAllData(true);
         }
 
         initAdmin();

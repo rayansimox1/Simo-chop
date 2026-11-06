@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" dir="ltr" id="htmlRoot">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- ملف البيانات الخارجي الاختياري عند النشر -->
+    <script src="store-data.js" onerror="console.log('Using default or localStorage data')"></script>
     <style>
         :root {
             --primary-color: #000000;
@@ -30,8 +32,8 @@
         
         <!-- 1. صورة الغلاف -->
         <div class="relative h-44 bg-gradient-to-r from-gray-900 to-gray-700">
-            <img id="coverImg" src="" alt="Cover" class="w-full h-full object-cover opacity-70">
-            <button id="langBadge" class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-semibold shadow">
+            <img id="coverImg" src="" alt="Cover" onerror="this.src='https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&w=800&q=80'" class="w-full h-full object-cover opacity-70">
+            <button id="langBadge" onclick="toggleLanguage()" title="Changer la langue / تغيير اللغة" class="absolute top-4 right-4 bg-white/90 hover:bg-white backdrop-blur px-3 py-1 rounded-full text-xs font-semibold shadow cursor-pointer transition active:scale-95">
                 🇫🇷 FR
             </button>
         </div>
@@ -39,7 +41,7 @@
         <!-- 2. معلومات البروفايل -->
         <div class="relative px-5 pb-4 text-center border-b border-gray-100">
             <div class="relative -mt-14 mb-3 inline-block">
-                <img id="logoImg" src="" alt="Logo" class="w-28 h-28 rounded-full border-4 border-white shadow-md object-cover bg-white">
+                <img id="logoImg" src="" alt="Logo" onerror="this.src='https://placehold.co/200x200/111827/ffffff?text=LOGO'" class="w-28 h-28 rounded-full border-4 border-white shadow-md object-cover bg-white">
                 <span id="verifiedBadge" class="absolute bottom-1 right-1 bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs border-2 border-white">
                     <i class="fa-solid fa-check"></i>
                 </span>
@@ -49,16 +51,19 @@
 
             <div class="flex justify-center gap-3 mt-4">
                 <a id="phoneLink" href="#" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 hover:bg-black hover:text-white transition"><i class="fa-solid fa-phone"></i></a>
-                <a id="waLink" href="#" target="_blank" class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 hover:bg-green-600 hover:text-white transition"><i class="fa-brands fa-whatsapp text-lg"></i></a>
-                <a id="igLink" href="#" target="_blank" class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 hover:bg-pink-600 hover:text-white transition"><i class="fa-brands fa-instagram text-lg"></i></a>
+                <a id="waLink" href="#" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 hover:bg-green-600 hover:text-white transition"><i class="fa-brands fa-whatsapp text-lg"></i></a>
+                <a id="igLink" href="#" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 hover:bg-pink-600 hover:text-white transition"><i class="fa-brands fa-instagram text-lg"></i></a>
             </div>
         </div>
 
         <!-- 3. البحث والتصنيفات -->
         <div class="sticky top-0 bg-white/95 backdrop-blur z-10 px-4 py-3 border-b border-gray-100">
             <div class="relative mb-3">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-gray-400 text-sm"></i>
-                <input type="text" id="searchInput" oninput="filterProducts()" placeholder="Rechercher une couleur, un modèle..." class="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-xl text-sm focus:outline-none">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 rtl:left-auto rtl:right-3.5 top-3 text-gray-400 text-sm"></i>
+                <input type="text" id="searchInput" oninput="renderProducts()" placeholder="Rechercher une couleur, un modèle..." class="w-full pl-10 pr-8 rtl:pr-10 rtl:pl-8 py-2 bg-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black/10">
+                <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 rtl:right-auto rtl:left-3 top-2.5 text-gray-400 hover:text-gray-600 text-xs">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                </button>
             </div>
             <div class="flex gap-2 overflow-x-auto hide-scroll pb-1" id="categories"></div>
         </div>
@@ -69,13 +74,13 @@
     </div>
 
     <!-- 5. نافذة تفاصيل المنتج ومعرض الصور -->
-    <div id="productModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden flex items-end sm:items-center justify-center">
+    <div id="productModal" onclick="handleBackdropClick(event, 'productModal')" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden flex items-end sm:items-center justify-center">
         <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 max-h-[90vh] overflow-y-auto relative">
-            <button onclick="closeProductModal()" class="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/80 backdrop-blur shadow flex items-center justify-center text-gray-800 hover:bg-black hover:text-white transition">
+            <button onclick="closeProductModal()" class="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-10 w-9 h-9 rounded-full bg-white/80 backdrop-blur shadow flex items-center justify-center text-gray-800 hover:bg-black hover:text-white transition">
                 <i class="fa-solid fa-xmark"></i>
             </button>
-            <div class="h-64 bg-gray-100 rounded-2xl overflow-hidden mb-3">
-                <img id="modalMainImg" src="" class="w-full h-full object-cover transition duration-300">
+            <div class="h-64 bg-gray-100 rounded-2xl overflow-hidden mb-3 relative">
+                <img id="modalMainImg" src="" onerror="this.src='https://placehold.co/400x400/f1f5f9/94a3b8?text=Image'" class="w-full h-full object-cover transition duration-300">
             </div>
             <div id="modalThumbnails" class="flex gap-2 overflow-x-auto hide-scroll pb-2 mb-3"></div>
             <span id="modalCategory" class="text-[11px] font-semibold text-green-600 bg-green-50 px-2.5 py-1 rounded-full"></span>
@@ -84,51 +89,111 @@
                 <span id="modalPrice" class="text-xl font-bold text-primary"></span>
                 <span id="modalOldPrice" class="text-xs text-gray-400 line-through"></span>
             </div>
-            <p id="modalDesc" class="text-xs text-gray-600 leading-relaxed mb-5"></p>
+            <p id="modalDesc" class="text-xs text-gray-600 leading-relaxed mb-5 whitespace-pre-line"></p>
             <button id="modalAddBtn" class="w-full bg-primary text-white font-semibold py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg hover:opacity-95 transition">
                 <i class="fa-solid fa-cart-plus"></i>
-                <span>Ajouter au panier</span>
+                <span id="modalAddBtnText">Ajouter au panier</span>
             </button>
         </div>
     </div>
 
     <!-- 6. الشريط السفلي للسلة -->
-    <div id="bottomCart" onclick="toggleCartModal()" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-11/12 max-w-md bg-primary text-white p-4 rounded-2xl shadow-2xl flex justify-between items-center cursor-pointer transition-all transform translate-y-28 z-20">
+    <div id="bottomCart" onclick="toggleCartModal()" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-11/12 max-w-md bg-primary text-white p-4 rounded-2xl shadow-2xl flex justify-between items-center cursor-pointer transition-all duration-300 transform translate-y-32 z-20">
         <div class="flex items-center gap-3">
             <div class="bg-white/20 w-10 h-10 rounded-xl flex items-center justify-center font-bold" id="cartBadge">0</div>
             <div>
-                <p class="text-xs text-gray-300">Total du panier</p>
+                <p class="text-xs text-gray-300" id="cartBarLabel">Total du panier</p>
                 <p class="font-bold text-sm" id="cartTotalBar">0 MAD</p>
             </div>
         </div>
         <div class="flex items-center gap-2 font-semibold text-sm bg-accent px-4 py-2 rounded-xl">
-            <span>Commander</span>
-            <i class="fa-solid fa-arrow-right"></i>
+            <span id="checkoutBtnLabel">Commander</span>
+            <i class="fa-solid fa-arrow-right rtl:rotate-180"></i>
         </div>
     </div>
 
     <!-- 7. نافذة إتمام الطلب -->
-    <div id="cartModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden flex items-end justify-center">
-        <div class="bg-white w-full max-w-md rounded-t-3xl p-5 max-h-[85vh] flex flex-col">
+    <div id="cartModal" onclick="handleBackdropClick(event, 'cartModal')" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden flex items-end sm:items-center justify-center">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 max-h-[85vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h2 class="font-bold text-lg">Votre Panier 🛒</h2>
+                <div class="flex items-center gap-2">
+                    <h2 class="font-bold text-lg" id="cartModalTitle">Votre Panier 🛒</h2>
+                    <button onclick="clearCart()" id="clearCartBtn" class="text-[11px] text-red-500 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg font-medium transition">
+                        Vider
+                    </button>
+                </div>
                 <button onclick="toggleCartModal()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div id="cartItemsList" class="overflow-y-auto flex-1 space-y-3 pr-1 mb-4"></div>
             <div class="space-y-2.5 border-t pt-3 mb-4">
-                <input type="text" id="clientName" placeholder="Votre Nom complet *" class="w-full p-2.5 bg-gray-100 rounded-xl text-sm focus:outline-none">
-                <input type="text" id="clientCity" placeholder="Ville et Adresse *" class="w-full p-2.5 bg-gray-100 rounded-xl text-sm focus:outline-none">
-                <input type="tel" id="clientPhone" placeholder="Numéro de téléphone *" class="w-full p-2.5 bg-gray-100 rounded-xl text-sm focus:outline-none">
+                <input type="text" id="clientName" oninput="saveClientInfo()" placeholder="Votre Nom complet *" class="w-full p-2.5 bg-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black/10">
+                <input type="text" id="clientCity" oninput="saveClientInfo()" placeholder="Ville et Adresse *" class="w-full p-2.5 bg-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black/10">
+                <input type="tel" id="clientPhone" oninput="saveClientInfo()" placeholder="Numéro de téléphone *" class="w-full p-2.5 bg-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black/10" dir="ltr">
             </div>
-            <button onclick="sendWhatsAppOrder()" class="w-full bg-accent text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg">
+            <button onclick="sendWhatsAppOrder()" class="w-full bg-accent text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg hover:opacity-95 transition">
                 <i class="fa-brands fa-whatsapp text-xl"></i>
-                <span>Commander sur WhatsApp (<span id="modalTotal">0</span> <span id="modalCurrency">MAD</span>)</span>
+                <span><span id="waOrderBtnLabel">Commander sur WhatsApp</span> (<span id="modalTotal">0</span> <span id="modalCurrency">MAD</span>)</span>
             </button>
         </div>
     </div>
 
     <script>
         const STORAGE_KEY = 'boka_store_config_v1';
+        const CART_STORAGE_KEY = 'boka_store_cart_v1';
+        const CLIENT_STORAGE_KEY = 'boka_store_client_v1';
+
+        const i18n = {
+            fr: {
+                dir: 'ltr',
+                badge: '🇫🇷 FR',
+                searchPlaceholder: 'Rechercher une couleur, un modèle...',
+                allCategories: 'Tous',
+                addBtn: 'Ajouter',
+                outOfStock: 'Épuisé',
+                addToCartModal: 'Ajouter au panier',
+                cartTotalLabel: 'Total du panier',
+                checkoutBtn: 'Commander',
+                cartTitle: 'Votre Panier 🛒',
+                clearCart: 'Vider',
+                namePlaceholder: 'Votre Nom complet *',
+                cityPlaceholder: 'Ville et Adresse *',
+                phonePlaceholder: 'Numéro de téléphone *',
+                waOrderBtn: 'Commander sur WhatsApp',
+                emptyProducts: 'Aucun produit ne correspond à votre recherche.',
+                fillFieldsAlert: 'Veuillez remplir tous les champs (Nom, Ville, Téléphone).',
+                orderHeader: 'Nouvelle Commande',
+                clientLabel: 'Client',
+                phoneLabel: 'Tél',
+                addressLabel: 'Adresse',
+                itemsLabel: 'Articles',
+                totalLabel: 'TOTAL À PAYER'
+            },
+            ar: {
+                dir: 'rtl',
+                badge: '🇲🇦 AR',
+                searchPlaceholder: 'ابحث عن منتج، لون، أو موديل...',
+                allCategories: 'الكل',
+                addBtn: 'أضف للسلة',
+                outOfStock: 'نفذت الكمية',
+                addToCartModal: 'أضف إلى السلة',
+                cartTotalLabel: 'مجموع السلة',
+                checkoutBtn: 'إتمام الطلب',
+                cartTitle: 'سلة المشتريات 🛒',
+                clearCart: 'إفراغ',
+                namePlaceholder: 'الاسم الكامل *',
+                cityPlaceholder: 'المدينة والعنوان *',
+                phonePlaceholder: 'رقم الهاتف *',
+                waOrderBtn: 'اطلب عبر واتساب',
+                emptyProducts: 'لا توجد منتجات مطابقة لبحثك.',
+                fillFieldsAlert: 'المرجو ملء جميع الحقول (الاسم، المدينة، ورقم الهاتف).',
+                orderHeader: 'طلب جديد',
+                clientLabel: 'الزبون',
+                phoneLabel: 'الهاتف',
+                addressLabel: 'العنوان',
+                itemsLabel: 'المنتجات',
+                totalLabel: 'المجموع الواجب أداؤه'
+            }
+        };
 
         const defaultData = {
             store: {
@@ -158,23 +223,95 @@
                 { id: "Packs", label: "🎁 Packs Promo" }
             ],
             products: [
-                { id: 1, name: "Parapluie Automatique - Noir Classique", category: "Parapluies", price: 149, oldPrice: 199, img: "1000385822.jpg", gallery: ["1000385822.jpg", "1000385824.jpg", "1000385832.jpg"], desc: "Parapluie pliable automatique ultra-résistant au vent avec revêtement imperméable et pochette incluse. Ouverture et fermeture d'une seule main." },
-                { id: 2, name: "Parapluie Automatique - Rose Poudré", category: "Parapluies", price: 149, oldPrice: 199, img: "1000385820.jpg", gallery: ["1000385820.jpg", "1000385828.jpg", "1000385822.jpg"], desc: "Design élégant en rose poudré. Protection anti-UV et imperméabilité supérieure avec bouton d'ouverture automatique." },
-                { id: 3, name: "Parapluie Automatique - Bleu Ardoise", category: "Parapluies", price: 149, oldPrice: 199, img: "1000385832.jpg", gallery: ["1000385832.jpg", "1000385822.jpg", "1000385824.jpg"], desc: "Couleur bleu ardoise moderne, structure renforcée et séchage rapide. Livré avec sa housse de protection." },
-                { id: 4, name: "Parapluie Automatique - Vert Pistache", category: "Parapluies", price: 149, oldPrice: 199, img: "1000385826.jpg", gallery: ["1000385826.jpg", "1000385830.jpg", "1000385828.jpg"], desc: "Couleur fraîche et originale, format compact idéal pour le sac à main ou la voiture." },
-                { id: 5, name: "Parapluie Automatique - Gris Perle", category: "Parapluies", price: 149, oldPrice: 199, img: "1000385824.jpg", gallery: ["1000385824.jpg", "1000385822.jpg", "1000385828.jpg"], desc: "Gris perle sobre et chic. Poignée ergonomique avec dragonne et bouton automatique." },
-                { id: 6, name: "Parapluie Automatique - Vert Émeraude", category: "Parapluies", price: 149, oldPrice: 199, img: "1000385830.jpg", gallery: ["1000385830.jpg", "1000385826.jpg", "1000385822.jpg"], desc: "Vert émeraude profond avec finitions dorées sur la poignée. Haute résistance aux intempéries." },
-                { id: 7, name: "Parapluie Automatique - Beige Crème", category: "Parapluies", price: 149, oldPrice: 199, img: "1000385828.jpg", gallery: ["1000385828.jpg", "1000385820.jpg", "1000385824.jpg"], desc: "Teinte beige crème minimaliste et luxueuse. Parfait contre la pluie et le soleil." }
+                { id: 1, name: "Parapluie Automatique - Noir Classique", category: "Parapluies", price: 149, oldPrice: 199, inStock: true, img: "1000385822.jpg", gallery: ["1000385822.jpg", "1000385824.jpg", "1000385832.jpg"], desc: "Parapluie pliable automatique ultra-résistant au vent avec revêtement imperméable et pochette incluse. Ouverture et fermeture d'une seule main." },
+                { id: 2, name: "Parapluie Automatique - Rose Poudré", category: "Parapluies", price: 149, oldPrice: 199, inStock: true, img: "1000385820.jpg", gallery: ["1000385820.jpg", "1000385828.jpg", "1000385822.jpg"], desc: "Design élégant en rose poudré. Protection anti-UV et imperméabilité supérieure avec bouton d'ouverture automatique." },
+                { id: 3, name: "Parapluie Automatique - Bleu Ardoise", category: "Parapluies", price: 149, oldPrice: 199, inStock: true, img: "1000385832.jpg", gallery: ["1000385832.jpg", "1000385822.jpg", "1000385824.jpg"], desc: "Couleur bleu ardoise moderne, structure renforcée et séchage rapide. Livré avec sa housse de protection." },
+                { id: 4, name: "Parapluie Automatique - Vert Pistache", category: "Parapluies", price: 149, oldPrice: 199, inStock: true, img: "1000385826.jpg", gallery: ["1000385826.jpg", "1000385830.jpg", "1000385828.jpg"], desc: "Couleur fraîche et originale, format compact idéal pour le sac à main ou la voiture." },
+                { id: 5, name: "Parapluie Automatique - Gris Perle", category: "Parapluies", price: 149, oldPrice: 199, inStock: true, img: "1000385824.jpg", gallery: ["1000385824.jpg", "1000385822.jpg", "1000385828.jpg"], desc: "Gris perle sobre et chic. Poignée ergonomique avec dragonne et bouton automatique." },
+                { id: 6, name: "Parapluie Automatique - Vert Émeraude", category: "Parapluies", price: 149, oldPrice: 199, inStock: true, img: "1000385830.jpg", gallery: ["1000385830.jpg", "1000385826.jpg", "1000385822.jpg"], desc: "Vert émeraude profond avec finitions dorées sur la poignée. Haute résistance aux intempéries." },
+                { id: 7, name: "Parapluie Automatique - Beige Crème", category: "Parapluies", price: 149, oldPrice: 199, inStock: true, img: "1000385828.jpg", gallery: ["1000385828.jpg", "1000385820.jpg", "1000385824.jpg"], desc: "Teinte beige crème minimaliste et luxueuse. Parfait contre la pluie et le soleil." }
             ]
         };
 
-        const config = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultData;
-        const products = config.products;
-        const CURRENCY = config.store.currency || 'MAD';
-        let cart = {};
+        function loadConfig() {
+            const local = localStorage.getItem(STORAGE_KEY);
+            if (local) {
+                try { return JSON.parse(local); } catch (e) {}
+            }
+            if (window.EXTERNAL_STORE_DATA) {
+                return window.EXTERNAL_STORE_DATA;
+            }
+            return defaultData;
+        }
+
+        let config = loadConfig();
+        let products = config.products || [];
+        let CURRENCY = config.store.currency || 'MAD';
         let currentCategory = 'Tous';
+        let currentLang = (config.store.langBadge && config.store.langBadge.includes('AR')) ? 'ar' : 'fr';
+        let cart = {};
+
+        // استرجاع السلة وبيانات الزبون المحفوظة
+        function initSavedState() {
+            try {
+                const savedCart = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || '{}');
+                cart = {};
+                // التحقق من أن المنتجات المحفوظة لا تزال موجودة ومحدثة السعر
+                Object.values(savedCart).forEach(item => {
+                    const freshProd = products.find(p => p.id === item.id);
+                    if (freshProd && freshProd.inStock !== false) {
+                        cart[freshProd.id] = { ...freshProd, qty: item.qty };
+                    }
+                });
+            } catch (e) { cart = {}; }
+
+            try {
+                const savedClient = JSON.parse(localStorage.getItem(CLIENT_STORAGE_KEY) || '{}');
+                if (savedClient.name) document.getElementById('clientName').value = savedClient.name;
+                if (savedClient.city) document.getElementById('clientCity').value = savedClient.city;
+                if (savedClient.phone) document.getElementById('clientPhone').value = savedClient.phone;
+            } catch (e) {}
+        }
+
+        function saveClientInfo() {
+            const clientData = {
+                name: document.getElementById('clientName').value,
+                city: document.getElementById('clientCity').value,
+                phone: document.getElementById('clientPhone').value
+            };
+            localStorage.setItem(CLIENT_STORAGE_KEY, JSON.stringify(clientData));
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'fr' ? 'ar' : 'fr';
+            applyLanguageUI();
+            renderCategories();
+            renderProducts();
+            updateCartUI();
+        }
+
+        function applyLanguageUI() {
+            const t = i18n[currentLang];
+            const htmlRoot = document.getElementById('htmlRoot');
+            htmlRoot.lang = currentLang;
+            htmlRoot.dir = t.dir;
+
+            document.getElementById('langBadge').innerText = t.badge;
+            document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+            document.getElementById('cartBarLabel').innerText = t.cartTotalLabel;
+            document.getElementById('checkoutBtnLabel').innerText = t.checkoutBtn;
+            document.getElementById('cartModalTitle').innerText = t.cartTitle;
+            document.getElementById('clearCartBtn').innerText = t.clearCart;
+            document.getElementById('clientName').placeholder = t.namePlaceholder;
+            document.getElementById('clientCity').placeholder = t.cityPlaceholder;
+            document.getElementById('clientPhone').placeholder = t.phonePlaceholder;
+            document.getElementById('waOrderBtnLabel').innerText = t.waOrderBtn;
+        }
 
         function applyStoreDesignAndProfile() {
+            products = config.products || [];
+            CURRENCY = config.store.currency || 'MAD';
+
             // تطبيق الألوان والخطوط
             document.documentElement.style.setProperty('--primary-color', config.design.primaryColor);
             document.documentElement.style.setProperty('--accent-color', config.design.accentColor);
@@ -188,54 +325,80 @@
             document.getElementById('storeBioEl').innerText = config.store.bio;
             document.getElementById('logoImg').src = config.store.logo;
             document.getElementById('coverImg').src = config.store.cover;
-            document.getElementById('langBadge').innerText = config.store.langBadge;
             document.getElementById('verifiedBadge').style.display = config.store.verified ? 'flex' : 'none';
             document.getElementById('modalCurrency').innerText = CURRENCY;
 
-            // الروابط
+            // تنظيف وتطبيق الروابط
+            const cleanWa = (config.store.whatsapp || '').replace(/\D/g, '');
             document.getElementById('phoneLink').href = `tel:${config.store.phone}`;
-            document.getElementById('waLink').href = `https://wa.me/${config.store.whatsapp}`;
+            document.getElementById('waLink').href = `https://wa.me/${cleanWa}`;
             document.getElementById('igLink').href = config.store.instagram;
 
             // تخطيط الشبكة
             const grid = document.getElementById('productsGrid');
             grid.className = `p-4 grid grid-cols-${config.design.gridCols} gap-3.5`;
 
-            // عرض الفئات
+            applyLanguageUI();
+            renderCategories();
+        }
+
+        function renderCategories() {
             const catContainer = document.getElementById('categories');
             catContainer.innerHTML = '';
+            const t = i18n[currentLang];
+
             config.categories.forEach(cat => {
                 const isActive = cat.id === currentCategory;
-                catContainer.innerHTML += `
-                    <button onclick="setCategory('${cat.id}')" class="cat-btn ${isActive ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'} px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition">
-                        ${cat.label}
-                    </button>
-                `;
+                const displayLabel = (cat.id === 'Tous') ? t.allCategories : cat.label;
+                const btn = document.createElement('button');
+                btn.className = `cat-btn ${isActive ? 'bg-primary text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition`;
+                btn.textContent = displayLabel;
+                btn.onclick = () => setCategory(cat.id);
+                catContainer.appendChild(btn);
             });
         }
 
         function renderProducts() {
             const grid = document.getElementById('productsGrid');
-            const search = document.getElementById('searchInput').value.toLowerCase();
+            const searchInput = document.getElementById('searchInput');
+            const search = searchInput.value.toLowerCase().trim();
+            const clearBtn = document.getElementById('clearSearchBtn');
+            clearBtn.classList.toggle('hidden', search.length === 0);
+
             const radius = config.design.cardRadius || 'rounded-2xl';
+            const t = i18n[currentLang];
             grid.innerHTML = '';
 
             const filtered = products.filter(p => {
                 const matchCat = currentCategory === 'Tous' || p.category === currentCategory;
-                const matchSearch = p.name.toLowerCase().includes(search);
+                const matchSearch = p.name.toLowerCase().includes(search) || (p.desc && p.desc.toLowerCase().includes(search));
                 return matchCat && matchSearch;
             });
 
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-gray-400">
+                        <i class="fa-solid fa-box-open text-3xl mb-2"></i>
+                        <p class="text-xs font-medium">${t.emptyProducts}</p>
+                    </div>
+                `;
+                return;
+            }
+
             filtered.forEach(p => {
                 const qty = cart[p.id] ? cart[p.id].qty : 0;
+                const isAvailable = p.inStock !== false;
+                const galleryCount = Array.isArray(p.gallery) && p.gallery.length ? p.gallery.length : 1;
+
                 grid.innerHTML += `
-                    <div class="bg-white ${radius} border border-gray-100 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition">
+                    <div class="bg-white ${radius} border border-gray-100 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition ${!isAvailable ? 'opacity-75' : ''}">
                         <div onclick="openProductModal(${p.id})" class="cursor-pointer">
                             <div class="relative h-40 bg-gray-100">
-                                <img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover">
+                                <img src="${p.img}" alt="${p.name}" onerror="this.src='https://placehold.co/400x400/f1f5f9/94a3b8?text=Produit'" class="w-full h-full object-cover">
                                 ${p.oldPrice ? `<span class="absolute top-2 left-2 bg-promo text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Promo</span>` : ''}
+                                ${!isAvailable ? `<span class="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xs font-bold">${t.outOfStock}</span>` : ''}
                                 <span class="absolute bottom-2 right-2 bg-black/60 backdrop-blur text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1">
-                                    <i class="fa-regular fa-images"></i> ${p.gallery.length}
+                                    <i class="fa-regular fa-images"></i> ${galleryCount}
                                 </span>
                             </div>
                             <div class="p-3">
@@ -248,9 +411,13 @@
                             </div>
                         </div>
                         <div class="px-3 pb-3">
-                            ${qty === 0 ? `
-                                <button onclick="updateQty(${p.id}, 1)" class="w-full bg-primary text-white text-xs font-medium py-2 rounded-xl flex items-center justify-center gap-1.5 transition hover:opacity-90">
-                                    <i class="fa-solid fa-plus text-[10px]"></i> Ajouter
+                            ${!isAvailable ? `
+                                <button disabled class="w-full bg-gray-200 text-gray-500 text-xs font-medium py-2 rounded-xl cursor-not-allowed">
+                                    ${t.outOfStock}
+                                </button>
+                            ` : qty === 0 ? `
+                                <button onclick="updateQty(${p.id}, 1)" class="w-full bg-primary text-white text-xs font-medium py-2 rounded-xl flex items-center justify-center gap-1.5 transition hover:opacity-90 active:scale-95">
+                                    <i class="fa-solid fa-plus text-[10px]"></i> ${t.addBtn}
                                 </button>
                             ` : `
                                 <div class="flex items-center justify-between bg-gray-100 rounded-xl p-1">
@@ -265,31 +432,54 @@
             });
         }
 
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            renderProducts();
+        }
+
         function openProductModal(id) {
             const p = products.find(item => item.id === id);
             if (!p) return;
+            const t = i18n[currentLang];
+            const isAvailable = p.inStock !== false;
 
             document.getElementById('modalMainImg').src = p.img;
             document.getElementById('modalCategory').innerText = p.category;
             document.getElementById('modalTitle').innerText = p.name;
             document.getElementById('modalPrice').innerText = `${p.price} ${CURRENCY}`;
             document.getElementById('modalOldPrice').innerText = p.oldPrice ? `${p.oldPrice} ${CURRENCY}` : '';
-            document.getElementById('modalDesc').innerText = p.desc;
+            document.getElementById('modalDesc').innerText = p.desc || '';
 
             const thumbsContainer = document.getElementById('modalThumbnails');
             thumbsContainer.innerHTML = '';
-            p.gallery.forEach((imgUrl, index) => {
-                thumbsContainer.innerHTML += `
-                    <img src="${imgUrl}" onclick="changeModalImg('${imgUrl}', this)" 
-                         class="thumb-img w-16 h-16 rounded-xl object-cover cursor-pointer border-2 ${index === 0 ? 'border-primary' : 'border-transparent opacity-70'} transition">
-                `;
+            const galleryList = (Array.isArray(p.gallery) && p.gallery.length) ? p.gallery : [p.img];
+
+            galleryList.forEach((imgUrl, index) => {
+                const imgEl = document.createElement('img');
+                imgEl.src = imgUrl;
+                imgEl.onerror = function() { this.src = 'https://placehold.co/100x100/f1f5f9/94a3b8?text=Img'; };
+                imgEl.className = `thumb-img w-16 h-16 rounded-xl object-cover cursor-pointer border-2 ${index === 0 ? 'border-primary' : 'border-transparent opacity-70'} transition`;
+                imgEl.onclick = function() { changeModalImg(imgUrl, this); };
+                thumbsContainer.appendChild(imgEl);
             });
 
             const addBtn = document.getElementById('modalAddBtn');
-            addBtn.onclick = () => {
-                updateQty(p.id, 1);
-                closeProductModal();
-            };
+            const addBtnText = document.getElementById('modalAddBtnText');
+
+            if (!isAvailable) {
+                addBtn.disabled = true;
+                addBtn.className = "w-full bg-gray-300 text-gray-600 font-semibold py-3.5 rounded-xl flex items-center justify-center gap-2 cursor-not-allowed";
+                addBtnText.innerText = t.outOfStock;
+                addBtn.onclick = null;
+            } else {
+                addBtn.disabled = false;
+                addBtn.className = "w-full bg-primary text-white font-semibold py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg hover:opacity-95 transition";
+                addBtnText.innerText = t.addToCartModal;
+                addBtn.onclick = () => {
+                    updateQty(p.id, 1);
+                    closeProductModal();
+                };
+            }
 
             document.getElementById('productModal').classList.remove('hidden');
         }
@@ -308,20 +498,34 @@
             document.getElementById('productModal').classList.add('hidden');
         }
 
+        function handleBackdropClick(event, modalId) {
+            if (event.target.id === modalId) {
+                document.getElementById(modalId).classList.add('hidden');
+            }
+        }
+
         function setCategory(cat) {
             currentCategory = cat;
-            applyStoreDesignAndProfile();
+            renderCategories();
             renderProducts();
         }
 
-        function filterProducts() { renderProducts(); }
-
         function updateQty(id, change) {
             const product = products.find(p => p.id === id);
+            if (!product || product.inStock === false) return;
+
             if (!cart[id]) cart[id] = { ...product, qty: 0 };
             cart[id].qty += change;
             if (cart[id].qty <= 0) delete cart[id];
             
+            localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+            renderProducts();
+            updateCartUI();
+        }
+
+        function clearCart() {
+            cart = {};
+            localStorage.removeItem(CART_STORAGE_KEY);
             renderProducts();
             updateCartUI();
         }
@@ -337,9 +541,9 @@
 
             const bottomCart = document.getElementById('bottomCart');
             if (totalQty > 0) {
-                bottomCart.classList.remove('translate-y-28');
+                bottomCart.classList.remove('translate-y-32');
             } else {
-                bottomCart.classList.add('translate-y-28');
+                bottomCart.classList.add('translate-y-32');
                 document.getElementById('cartModal').classList.add('hidden');
             }
 
@@ -349,16 +553,16 @@
                 list.innerHTML += `
                     <div class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl">
                         <div class="flex items-center gap-3">
-                            <img src="${item.img}" class="w-12 h-12 rounded-lg object-cover">
+                            <img src="${item.img}" onerror="this.src='https://placehold.co/100x100/f1f5f9/94a3b8?text=Img'" class="w-12 h-12 rounded-lg object-cover">
                             <div>
-                                <h4 class="text-xs font-semibold">${item.name}</h4>
+                                <h4 class="text-xs font-semibold text-gray-800">${item.name}</h4>
                                 <p class="text-xs font-bold text-gray-500">${item.price} ${CURRENCY} x ${item.qty}</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="updateQty(${item.id}, -1)" class="w-6 h-6 bg-white border rounded-md text-xs">-</button>
+                            <button onclick="updateQty(${item.id}, -1)" class="w-6 h-6 bg-white border rounded-md text-xs font-bold">-</button>
                             <span class="text-xs font-bold">${item.qty}</span>
-                            <button onclick="updateQty(${item.id}, 1)" class="w-6 h-6 bg-primary text-white rounded-md text-xs">+</button>
+                            <button onclick="updateQty(${item.id}, 1)" class="w-6 h-6 bg-primary text-white rounded-md text-xs font-bold">+</button>
                         </div>
                     </div>
                 `;
@@ -373,13 +577,17 @@
             const name = document.getElementById('clientName').value.trim();
             const city = document.getElementById('clientCity').value.trim();
             const phone = document.getElementById('clientPhone').value.trim();
+            const t = i18n[currentLang];
+
             if (!name || !city || !phone) {
-                alert("Veuillez remplir tous les champs (Nom, Ville, Téléphone).");
+                alert(t.fillFieldsAlert);
                 return;
             }
 
-            let text = `*Nouvelle Commande - ${config.store.name}* ☔\n\n`;
-            text += `*Client:* ${name}\n*Tél:* ${phone}\n*Adresse:* ${city}\n\n*Articles:*\n`;
+            saveClientInfo();
+
+            let text = `*${t.orderHeader} - ${config.store.name}* 🛍️\n\n`;
+            text += `*${t.clientLabel}:* ${name}\n*${t.phoneLabel}:* ${phone}\n*${t.addressLabel}:* ${city}\n\n*${t.itemsLabel}:*\n`;
             
             let total = 0;
             Object.values(cart).forEach(item => {
@@ -388,12 +596,34 @@
                 text += `▪️ ${item.qty}x ${item.name} (${sub} ${CURRENCY})\n`;
             });
 
-            text += `\n*TOTAL À PAYER : ${total} ${CURRENCY}*`;
-            window.open(`https://wa.me/${config.store.whatsapp}?text=${encodeURIComponent(text)}`, '_blank');
+            text += `\n*${t.totalLabel} : ${total} ${CURRENCY}*`;
+            const cleanWa = (config.store.whatsapp || '').replace(/\D/g, '');
+            window.open(`https://wa.me/${cleanWa}?text=${encodeURIComponent(text)}`, '_blank');
         }
 
+        // إغلاق النوافذ بزر Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeProductModal();
+                document.getElementById('cartModal').classList.add('hidden');
+            }
+        });
+
+        // استقبال التحديثات الحية من لوحة التحكم فورا
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'BOKA_UPDATE_CONFIG') {
+                config = event.data.payload;
+                applyStoreDesignAndProfile();
+                initSavedState();
+                renderProducts();
+                updateCartUI();
+            }
+        });
+
+        initSavedState();
         applyStoreDesignAndProfile();
         renderProducts();
+        updateCartUI();
     </script>
 </body>
 </html>
